@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -33,7 +33,8 @@ jobs:
           git ls-files '*.hs' -z | xargs -0 sed -i 's/^ )$/  )/'
 
       - name: Run Linter
-        uses: super-linter/super-linter/slim@ffde3b2b33b745cb612d787f669ef9442b1339a6
+        # v8.3.2
+        uses: super-linter/super-linter/slim@d5b0a2ab116623730dd094f15ddc1b6b25bf7b99
         env:
           LINTER_RULES_PATH: .
           YAML_CONFIG_FILE: .yamllint.yaml

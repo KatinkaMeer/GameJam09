@@ -8,8 +8,9 @@ These tool can also usually be installed via package managers, e.g. `brew`
 and then used in Terminal.
 For this repository following tools might be useful:
 
-  - `editorconfig`
-  - `editorconfig-checker`
-  - `fourmolu`
-  - `jspcd`
-  - `yamllint`
+- `editorconfig`
+- `editorconfig-checker`
+- `fourmolu`
+- `jspcd`
+- `prettier`
+- `yamllint`
