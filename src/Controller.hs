@@ -25,10 +25,17 @@ handleInput event world@World {..} =
         }
     _ -> world
 
+moveSpeed, floatSpeed :: Float
+moveSpeed = 300
+floatSpeed = 60
+
 update :: Float -> World -> World
-update _ world@World {..}
-  | KeyDown `elem` pressedKeys = world {position = second (- 5) position}
-  | KeyUp `elem` pressedKeys = world {position = second (+ 5) position}
-  | KeyLeft `elem` pressedKeys = world {position = first (- 5) position}
-  | KeyRight `elem` pressedKeys = world {position = first (+ 5) position}
-  | otherwise = world
+update t world@World {position = (x, y), ..} =
+  world
+    { position = (x + moveSpeed * t * modifier, y + t * floatSpeed)
+    }
+  where
+    modifier
+      | KeyLeft `elem` pressedKeys = -1
+      | KeyRight `elem` pressedKeys = 1
+      | otherwise = 0
