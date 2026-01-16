@@ -54,6 +54,19 @@ extra-doc-files:    CHANGELOG.md
 common warnings
     ghc-options: -Wall
 
+library
+  exposed-modules:
+    Model,
+    View,
+    Controller
+  hs-source-dirs:
+    src
+  build-depends:
+    base ^>=4.18.3.0,
+    extra,
+    gloss
+  default-language: GHC2021
+
 executable GameJam09
     -- Import common warning flags.
     import:           warnings
@@ -68,7 +81,9 @@ executable GameJam09
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.18.3.0,
+    build-depends:
+        GameJam09,
+        base ^>=4.18.3.0,
         extra,
         gloss
 
@@ -76,7 +91,7 @@ executable GameJam09
     hs-source-dirs:   app
 
     -- Base language which the package is written in.
-    default-language: Haskell2010
+    default-language: GHC2021
 
     -- Supposedly improves framerate
     ghc-options:

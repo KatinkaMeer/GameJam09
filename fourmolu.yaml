@@ -9,7 +9,7 @@ record-style: knr
 import-export-style: diff-friendly
 import-grouping: by-scope-then-qualified
 indent-wheres: true
-record-brace-space: false
+record-brace-space: true
 newlines-between-decls: 1
 haddock-style: multi-line-compact
 haddock-style-module: multi-line-compact
