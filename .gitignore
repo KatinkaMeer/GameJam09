@@ -3,7 +3,7 @@
 *.swp
 .DS_Store
 .stack-work/
-.stack.yaml.lock
 .vscode/
 dist-newstyle/
 dist/
+stack.yaml.lock
