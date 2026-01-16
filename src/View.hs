@@ -13,10 +13,10 @@ import Graphics.Gloss (
   translate,
  )
 
-import Model (World (World, position))
+import Model (Object (Object, position), World (World, character))
 
 render :: World -> Picture
-render World {position = (x, y), ..} =
+render World {character = Object {position = (x, y)}, ..} =
   pictures
     $
     -- player sprite
