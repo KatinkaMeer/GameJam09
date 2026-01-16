@@ -3,9 +3,10 @@
 module Main where
 
 import Graphics.Gloss
+
+import Controller
 import Model
 import View
-import Controller
 
 main :: IO ()
 main =
