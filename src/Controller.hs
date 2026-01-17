@@ -4,11 +4,13 @@
 module Controller where
 
 import Data.List (delete)
+import Data.Maybe (isNothing)
 import Data.Tuple.Extra (first, second)
 import Graphics.Gloss.Interface.Pure.Game (
   Event (EventKey),
-  Key (SpecialKey),
+  Key (MouseButton, SpecialKey),
   KeyState (Down, Up),
+  MouseButton (LeftButton),
   SpecialKey (KeyDown, KeyLeft, KeyRight, KeyUp),
   blank,
   circleSolid,
@@ -20,10 +22,14 @@ import Graphics.Gloss.Interface.Pure.Game (
 import Model (
   Assets (..),
   CharacterStatus (..),
-  Object (Object, position),
+  Jump (..),
+  Object (..),
   World (..),
   characterInBalloon,
   characterInBubble,
+ )
+import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
+  (+),
  )
 
 handleInput :: Event -> World -> World
@@ -35,6 +41,33 @@ handleInput event world@World {..} =
             Down -> k : pressedKeys
             Up -> delete k pressedKeys
         }
+    EventKey (MouseButton LeftButton) Down _ mpos
+      | isNothing jump,
+        characterStatus `elem` [CharacterInBalloon, CharacterInBubble] ->
+          world {jump = Just InitJump {mousePoint = mpos}}
+    EventKey (MouseButton LeftButton) Up _ mpos
+      | Just InitJump {..} <- jump,
+        characterStatus `elem` [CharacterInBalloon, CharacterInBubble] ->
+          let
+            -- TODO add minimum velocity and maximum velocity as variables
+            rposx = fst mousePoint
+            rposy = snd mousePoint
+            mposx = fst mpos
+            mposy = snd mpos
+            vx = mposx - rposx
+            vy = mposy - rposy
+            v2 = vx * vx + vy * vy
+            rv = sqrt $ v2 / (max 1 $ min v2 100)
+            vx' = vx / rv
+            vy' = vy / rv
+          in
+            world
+              { character =
+                  character
+                    { velocity = velocity character P.+ (vx', vy') -- galilei
+                    },
+                jump = Nothing -- new Jump possible
+              }
     _ -> world
 
 -- (left/right, bottom), top unlimited

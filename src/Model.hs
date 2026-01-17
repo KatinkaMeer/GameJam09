@@ -20,18 +20,24 @@ data Object = Object
   { position :: !Point,
     velocity :: !Vector
   }
+  deriving Show
 
 data ObjectType = Balloon | Bubble
 
-data Jump = Jump
-  { direction :: !Vector,
-    speed :: !Float
-  }
+data Jump
+  = Jump
+      { direction :: !Vector,
+        speed :: !Float
+      }
+  | InitJump
+      { mousePoint :: !Point
+      }
 
 data CharacterStatus
   = CharacterInBalloon Float
   | CharacterInBubble Float
   | PlainCharacter
+  deriving Eq
 
 characterInBubble :: Float -> CharacterStatus
 characterInBubble t
