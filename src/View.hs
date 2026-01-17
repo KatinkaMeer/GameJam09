@@ -13,7 +13,7 @@ import Graphics.Gloss (
  )
 
 import Model (
-  Assets (Assets, player),
+  Assets (..),
   Object (Object, position),
   World (World, assets, character),
  )
