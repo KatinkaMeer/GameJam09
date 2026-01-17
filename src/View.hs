@@ -2,14 +2,17 @@
 
 module View (render) where
 
+import Data.Maybe
 import Graphics.Gloss (
   Picture (Pictures),
   black,
   blank,
   circleSolid,
   color,
+  line,
   pictures,
   rectangleSolid,
+  text,
   translate,
  )
 
@@ -19,6 +22,7 @@ import Model (
   Assets (..),
   CharacterStatus (..),
   GlobalState (..),
+  Jump (..),
   Object (Object, position),
   Screen (..),
   UiState (UiState, assets),
@@ -33,7 +37,16 @@ import View.Frog (
 render :: GlobalState -> Picture
 render GlobalState {..} = case screen of
   StartScreen -> blank
-  GameScreen world -> renderWorld (assets uiState) world
+  GameScreen world@World {..} ->
+    pictures
+      [ case jump of
+          Nothing -> blank
+          Just j -> case j of
+            InitJump m -> line $ catMaybes [mousePosition, Just m]
+            Jump {} -> blank,
+        text (show mousePosition),
+        renderWorld (assets uiState) world
+      ]
   HighScoreScreen -> blank
 
 renderWorld :: Assets -> World -> Picture

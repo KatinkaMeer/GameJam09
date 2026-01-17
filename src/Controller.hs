@@ -7,7 +7,7 @@ import Data.List (delete, findIndex)
 import Data.Maybe (isNothing)
 import Data.Tuple.Extra (first, second)
 import Graphics.Gloss.Interface.Pure.Game (
-  Event (EventKey),
+  Event (EventKey, EventMotion),
   Key (MouseButton, SpecialKey),
   KeyState (Down, Up),
   MouseButton (LeftButton),
@@ -40,8 +40,8 @@ import Model (
  )
 
 handleInput :: Event -> GlobalState -> GlobalState
-handleInput event state@GlobalState {..} =
-  case event of
+handleInput event state@GlobalState {..} = setMousePosition (maybeMousePosFromEvent event)
+  $ case event of
     EventKey (SpecialKey k) action _ _ ->
       state
         { uiState =
@@ -90,6 +90,8 @@ handleInput event state@GlobalState {..} =
                       }
               }
     _ -> state
+  where
+    setMousePosition position gState@GlobalState {..} = gState {mousePosition = position}
 
 -- (left/right, bottom), top unlimited
 levelBoundary :: (Float, Float)
@@ -103,6 +105,11 @@ vmax = 300
 
 betweenSpeed :: Float -> Float -> Float
 betweenSpeed vmax v = max (-vmax) (min vmax v)
+
+maybeMousePosFromEvent :: Event -> Maybe (Float, Float)
+maybeMousePosFromEvent (EventKey _ _ _ pos) = Just pos
+maybeMousePosFromEvent (EventMotion pos) = Just pos
+maybeMousePosFromEvent _ = Nothing
 
 update :: Float -> GlobalState -> GlobalState
 update t state@GlobalState {..} =

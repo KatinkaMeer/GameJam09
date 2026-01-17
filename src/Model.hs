@@ -26,7 +26,8 @@ import Data.Map qualified as M
 
 data GlobalState = GlobalState
   { uiState :: !UiState,
-    screen :: !Screen
+    screen :: !Screen,
+    mousePosition :: !(Maybe (Float, Float))
   }
 
 initialGlobalState
@@ -42,7 +43,8 @@ initialGlobalState assets =
             pressedKeys = [],
             windowSize = (800, 450)
           },
-      screen = StartScreen
+      screen = StartScreen,
+      mousePosition = Nothing
     }
 
 data UiState = UiState
