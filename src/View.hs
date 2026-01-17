@@ -16,6 +16,8 @@ import View.Frog (
   frogSprite,
  )
 
+import Data.Map qualified as M
+
 import Model (
   Assets (..),
   Object (Object, position),
@@ -40,5 +42,5 @@ render
         map
           (translate (-x) (-y))
           ( translate (-250) 0 (rectangleSolid 100 1000)
-              : map (objectDataToPicture assets) objects
+              : M.elems (M.map (objectDataToPicture assets) objects)
           )

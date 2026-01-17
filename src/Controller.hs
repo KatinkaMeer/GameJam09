@@ -19,6 +19,7 @@ import Graphics.Gloss.Interface.Pure.Game (
   yellow,
  )
 
+import Data.Map qualified as M
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (+),
  )
@@ -93,7 +94,7 @@ update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, 
                 )
           },
       characterStatus = updateCharacterStatus,
-      collisionIndex = findIndex collisionWithPlayer objects,
+      collisionIndex = M.keys $ M.filter (not . collisionWithPlayer) objects,
       assets = case updateCharacterStatus of
         CharacterInBubble toPop
           -- cannot stack color, e.g. color red $ color yellow ...
@@ -101,7 +102,10 @@ update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, 
           | toPop < 3 -> a {bubble = color red $ circleSolid 30}
           | toPop < 7 -> a {bubble = color yellow bubble}
         PlainCharacter -> a {bubble = blank}
-        _ -> a
+        _ -> a,
+      -- TODO: use for new objects, then increment
+      -- or just increment always?
+      nextId = nextId
     }
   where
     modifier

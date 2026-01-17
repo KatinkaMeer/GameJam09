@@ -14,6 +14,7 @@ module Model (
 )
 where
 
+import Data.Map (Map, singleton)
 import Graphics.Gloss (Picture (Pictures), Point, Vector, translate)
 import Graphics.Gloss.Interface.Pure.Game (SpecialKey)
 
@@ -68,12 +69,13 @@ data Assets = Assets
 data World = World
   { character :: !Object,
     characterStatus :: !CharacterStatus,
-    collisionIndex :: Maybe Int,
+    collisionIndex :: [Integer],
     viewport :: !Object,
     jump :: !(Maybe Jump),
     pressedKeys :: ![SpecialKey],
-    objects :: ![(ObjectType, Object)],
-    assets :: !Assets
+    objects :: !(Map Integer (ObjectType, Object)),
+    assets :: !Assets,
+    nextId :: !Integer
   }
 
 objectDataToPicture :: Assets -> (ObjectType, Object) -> Picture
@@ -89,6 +91,10 @@ initialWorld assets =
       viewport = Object (0, 0) (0, 0),
       jump = Nothing,
       pressedKeys = [],
-      objects = [(Bubble, Object {position = (80, 40), velocity = (0, 0)})],
-      assets = assets
+      objects = singleton initialId (Bubble, Object {position = (80, 40), velocity = (0, 0)}),
+      assets = assets,
+      nextId = succ initialId
     }
+
+initialId :: Integer
+initialId = 1
