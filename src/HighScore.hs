@@ -1,5 +1,6 @@
 module HighScore (loadHighScores, logNewHighScore) where
 
+import Control.Monad (unless)
 import Data.List (sortOn)
 import System.Directory (XdgDirectory (XdgData), doesFileExist, getXdgDirectory)
 import System.FilePath ((<.>), (</>))
@@ -10,7 +11,7 @@ type HighScore = (String, Int)
 ensureFileExists :: FilePath -> IO ()
 ensureFileExists path = do
   fileExists <- doesFileExist path
-  if not fileExists then writeFile path "" else pure ()
+  unless fileExists $ writeFile path ""
 
 loadHighScores :: IO [HighScore]
 loadHighScores = highScoreFile >>= readHighScores
