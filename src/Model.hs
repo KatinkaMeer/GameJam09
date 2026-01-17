@@ -47,10 +47,11 @@ initialWorld assets =
     { character = Object (0, 0) (0, 0),
       characterInBubble = True,
       viewport = Object (0, 0) (0, 0),
-      windowSize = (1280, 720),
+      windowSize = (800, 450),
       characterAltitude = 0,
       jump = Nothing,
       pressedKeys = [],
       objects = [],
       assets = assets
     }
+

@@ -1,17 +1,21 @@
 module GlossyRuler where
 import Graphics.Gloss
 
-drawRuler :: (Int, Int) -> (Int, Int) -> Int -> Int -> Color -> Color -> Color -> Picture
-drawRuler position dimensions numTickMarks masurement baseColor tickColor messurementColor = 
-     pictures $ map (translate ipos) [base tickMarks massurement] 
+drawRuler :: (Float, Float) -> (Float, Float) -> Float -> Float -> Color -> Color -> Color -> Picture
+drawRuler position dimensions numTickMarks measurement baseColor tickColor measurementColor =
+     pictures $ map (translate posx posy) [base, measurementMaker] ++ tickMarks
     where
-        ipos = position * (-1)
+        posx = fst position
+        posy = snd position
         dimx = fst dimensions
         dimy = snd dimensions
-        base = color baseColor $ rectangleSolid dimensions
-        tick = color tickColor $ rectangleSolid (floor (dimx / numTickMarks * 0.1), floor (dimy / numTickMarks * 0.1))
+        base = color baseColor $ rectangleSolid dimx dimy
+        tickMarkDimensions = (50, 10)
+        tickMarkDimx = fst tickMarkDimensions
+        tickMarkDimy = snd tickMarkDimensions
+        tickMarkOffset = - (tickMarkDimx / 4)
+        tick = rectangleSolid tickMarkDimx tickMarkDimy
         tickStep = dimy / numTickMarks
         tickSteps = [tickStep .. tickStep * numTickMarks]
-        tickMarks = map (\y -> translate 0 y tick) tickSteps
-        massurement = translate (0, dimy) $ translate (0, -massurement) $ color massurementColor $ tick
-
+        tickMarks = map (\tickStep -> translate (- (tickMarkDimx / 2)) tickStep $ color measurementColor tick) tickSteps
+        measurementMaker = translate (- (tickMarkDimx / 2) + tickMarkOffset) measurement $ color measurementColor tick
