@@ -42,7 +42,11 @@ characterInBalloon t
 
 data Assets = Assets
   { player :: !Picture,
-    bubble :: !Picture
+    bubble :: !Picture,
+    frogBody :: !Picture,
+    frogEyesOpen :: !Picture,
+    frogEyesClosed :: !Picture,
+    frogMouth :: !Picture
   }
 
 data World = World

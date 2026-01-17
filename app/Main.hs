@@ -11,10 +11,18 @@ import View
 loadSprites :: IO Assets
 loadSprites = do
   player <- loadBMP "./assets/sprite.bmp"
+  frogBody <- loadBMP "./assets/frog/layers/body.bmp"
+  frogEyesOpen <- loadBMP "./assets/frog/layers/eyes-open.bmp"
+  frogEyesClosed <- loadBMP "./assets/frog/layers/eyes-closed.bmp"
+  frogMouth <- loadBMP "./assets/frog/layers/mouth.bmp"
   pure
     Assets
-      { player = player,
-        bubble = circleSolid 30
+      { player,
+        bubble = circleSolid 30,
+        frogBody,
+        frogEyesOpen,
+        frogEyesClosed,
+        frogMouth
       }
 
 main :: IO ()
