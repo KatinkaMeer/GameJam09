@@ -2,6 +2,7 @@
 
 module View (render) where
 
+import Data.Map qualified as M
 import Graphics.Gloss (
   Picture (Pictures),
   black,
@@ -12,9 +13,6 @@ import Graphics.Gloss (
   rectangleSolid,
   translate,
  )
-
-import Data.Map qualified as M
-
 import Model (
   Assets (..),
   CharacterStatus (..),
@@ -23,6 +21,7 @@ import Model (
   Screen (..),
   UiState (UiState, assets),
   World (..),
+  characterInBubble,
   objectDataToPicture,
  )
 import View.Frog (
@@ -43,11 +42,14 @@ renderWorld
     { character = Object {position = (x, y)},
       ..
     } =
-    pictures
-      $
+    pictures $
       -- player sprite
-      characterBubble assets
-        : frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
+      ( case characterStatus of
+          CharacterInBalloon _ -> [circleSolid 30] -- placeholder
+          CharacterInBubble _ -> [characterBubble assets]
+          PlainCharacter -> []
+      )
+        ++ frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
         :
         -- other stuff in the scene
         map
@@ -60,4 +62,4 @@ renderWorld
         CharacterInBubble t
           | t < 3 -> bubbleTimerDanger
           | t < 7 -> bubbleTimerAttention
-        _ -> const blank
+        _ -> const bubble assets

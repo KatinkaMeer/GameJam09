@@ -3,9 +3,14 @@
 
 module Controller where
 
-import Data.List (delete, findIndex)
-import Data.Maybe (isNothing)
+import Data.List (delete, find, findIndex)
+import Data.Map (lookup, member)
+import Data.Map qualified as M
+import Data.Maybe (isNothing, listToMaybe)
 import Data.Tuple.Extra (first, second)
+import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
+  (+),
+ )
 import Graphics.Gloss.Interface.Pure.Game (
   Event (EventKey),
   Key (MouseButton, SpecialKey),
@@ -18,18 +23,13 @@ import Graphics.Gloss.Interface.Pure.Game (
   red,
   yellow,
  )
-
-import Data.Map qualified as M
-import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
-  (+),
- )
-
 import Model (
   Assets (..),
   CharacterStatus (..),
   GlobalState (..),
   Jump (..),
   Object (..),
+  ObjectType (..),
   Screen (..),
   UiState (..),
   World (..),
@@ -118,22 +118,7 @@ updateWorld
   t
   UiState {..}
   world@World {character = me@(Object (x, y) (vx, vy)), ..} =
-    world
-      { character =
-          me
-            { position =
-                coordinateClamp
-                  ( x + moveSpeed * t * modifier + vx' * t,
-                    y + vy' * t
-                  ),
-              velocity = (vx', vy')
-            },
-        characterStatus = updateCharacterStatus,
-        collisions = M.keys $ M.filter collisionWithPlayer objects,
-        -- TODO: use and increment or increment every update
-        nextId = nextId
-      }
-    where
+    let
       modifier
         | KeyLeft `elem` pressedKeys = -1
         | KeyRight `elem` pressedKeys = 1
@@ -141,7 +126,15 @@ updateWorld
       (vx', vy', updateCharacterStatus) = case characterStatus of
         CharacterInBalloon timer -> (vx, betweenSpeed vmax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
         CharacterInBubble timer -> (vx, betweenSpeed vmax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
-        PlainCharacter -> (vx, betweenSpeed vmax (vy - t * fallSpeed), PlainCharacter)
+        PlainCharacter ->
+          ( vx,
+            betweenSpeed vmax (vy - t * fallSpeed),
+            -- only care about first collision
+            case listToMaybe newCollisions >>= \k -> M.lookup k objects of
+              Nothing -> PlainCharacter
+              Just (Bubble, _) -> CharacterInBubble 10
+              Just (Balloon, _) -> CharacterInBalloon 5
+          )
 
       timerUpdate = (- t)
 
@@ -151,4 +144,23 @@ updateWorld
         )
       -- CHANGE THIS
       collisionWithPlayer (_, Object {position = (oX, oY)}) =
-        sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 20
+        sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 40
+      newCollisions = M.keys $ M.filter collisionWithPlayer objects
+    in
+      world
+        { character =
+            me
+              { position =
+                  coordinateClamp
+                    ( x + moveSpeed * t * modifier + vx' * t,
+                      y + vy' * t
+                    ),
+                velocity = (vx', vy')
+              },
+          collisions = newCollisions,
+          characterStatus = updateCharacterStatus,
+          -- remove objects colliding with player
+          objects = M.filterWithKey (\k _ -> k `notElem` newCollisions) objects,
+          -- TODO: use and increment or increment every update
+          nextId = nextId
+        }

@@ -1,38 +1,38 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Model (
-  CharacterStatus (..),
-  GlobalState (..),
-  Jump (..),
-  Object (..),
-  Screen (..),
-  UiState (..),
-  World (..),
-  Assets (..),
-  characterFloats,
-  characterInBalloon,
-  characterInBubble,
-  initialGlobalState,
-  initialWorld,
-  objectDataToPicture,
-)
+module Model
+  ( CharacterStatus (..),
+    GlobalState (..),
+    Jump (..),
+    Object (..),
+    Screen (..),
+    UiState (..),
+    World (..),
+    Assets (..),
+    ObjectType (..),
+    characterFloats,
+    characterInBalloon,
+    characterInBubble,
+    initialGlobalState,
+    initialWorld,
+    objectDataToPicture,
+  )
 where
 
 import Data.Map (Map)
+import Data.Map qualified as M
 import Graphics.Gloss (Picture (Pictures), Point, Vector, translate)
 import Graphics.Gloss.Interface.Pure.Game (SpecialKey)
-
-import Data.Map qualified as M
 
 data GlobalState = GlobalState
   { uiState :: !UiState,
     screen :: !Screen
   }
 
-initialGlobalState
-  :: Assets
-  -- ^ Pre-rendered pictures
-  -> GlobalState
+initialGlobalState ::
+  -- | Pre-rendered pictures
+  Assets ->
+  GlobalState
 initialGlobalState assets =
   GlobalState
     { uiState =
@@ -65,9 +65,9 @@ data Object = Object
   { position :: !Point,
     velocity :: !Vector
   }
-  deriving Show
+  deriving (Show, Eq)
 
-data ObjectType = Balloon | Bubble
+data ObjectType = Balloon | Bubble deriving (Eq)
 
 data Jump
   = Jump
@@ -82,7 +82,7 @@ data CharacterStatus
   = CharacterInBalloon Float
   | CharacterInBubble Float
   | PlainCharacter
-  deriving Eq
+  deriving (Eq)
 
 characterInBubble :: Float -> CharacterStatus
 characterInBubble t
