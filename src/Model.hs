@@ -10,7 +10,7 @@ module Model (
 )
 where
 
-import Graphics.Gloss (Picture, Point, Vector)
+import Graphics.Gloss (Picture (Pictures), Point, Vector)
 import Graphics.Gloss.Interface.Pure.Game (SpecialKey)
 
 data Object = Object
@@ -46,7 +46,8 @@ data Assets = Assets
     frogBody :: !Picture,
     frogEyesOpen :: !Picture,
     frogEyesClosed :: !Picture,
-    frogMouth :: !Picture
+    frogMouth :: !Picture,
+    cloud :: Picture
   }
 
 data World = World
