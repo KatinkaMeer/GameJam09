@@ -16,7 +16,7 @@ data FrogState = FrogState
 
 frogSprite :: Assets -> FrogState -> Picture
 frogSprite Assets {..} state@FrogState {..} =
-  pictures $
-    frogBody
+  pictures
+    $ frogBody
       : (if eyesOpen then frogEyesOpen else frogEyesClosed)
       : ([frogMouth | mouthOpen])
