@@ -37,6 +37,10 @@ handleInput event world@World {..} =
         }
     _ -> world
 
+-- (left/right, bottom), top unlimited
+levelBoundary :: (Float, Float)
+levelBoundary = (500, -500)
+
 moveSpeed, floatSpeed, fallSpeed :: Float
 moveSpeed = 300
 floatSpeed = 60
@@ -48,9 +52,10 @@ update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, 
     { character =
         me
           { position =
-              ( x + moveSpeed * t * modifier,
-                y + yChange
-              )
+              coordinateClamp
+                ( x + moveSpeed * t * modifier,
+                  y + yChange
+                )
           },
       characterStatus = updateCharacterStatus,
       assets = case updateCharacterStatus of
@@ -74,3 +79,8 @@ update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, 
       PlainCharacter -> (-t * fallSpeed, PlainCharacter)
 
     timerUpdate = (- t)
+
+    coordinateClamp (xCoord, yCoord) =
+      ( if abs xCoord > fst levelBoundary then x else xCoord,
+        if yCoord < snd levelBoundary then y else yCoord
+      )
