@@ -26,8 +26,7 @@ import Data.Map qualified as M
 
 data GlobalState = GlobalState
   { uiState :: !UiState,
-    screen :: !Screen,
-    mousePosition :: !(Maybe (Float, Float))
+    screen :: !Screen
   }
 
 initialGlobalState
@@ -43,8 +42,7 @@ initialGlobalState assets =
             pressedKeys = [],
             windowSize = (800, 450)
           },
-      screen = StartScreen,
-      mousePosition = Nothing
+      screen = StartScreen
     }
 
 data UiState = UiState
@@ -120,6 +118,7 @@ data World = World
     elapsedTime :: !Float,
     viewport :: !Object,
     jump :: !(Maybe Jump),
+    mousePosition :: !(Float, Float),
     objects :: !(Map Integer (ObjectType, Object)),
     nextId :: Integer
   }
@@ -138,6 +137,7 @@ initialWorld =
       elapsedTime = 0,
       viewport = Object (0, 0) (0, 0),
       jump = Nothing,
+      mousePosition = (0, 0),
       objects = M.singleton 1 (Bubble, Object {position = (80, 40), velocity = (0, 0)}),
       nextId = 2
     }

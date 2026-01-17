@@ -40,7 +40,7 @@ import Model (
  )
 
 handleInput :: Event -> GlobalState -> GlobalState
-handleInput event state@GlobalState {..} = setMousePosition (maybeMousePosFromEvent event)
+handleInput event state@GlobalState {..} = setMousePosition (mousePosFromEvent event)
   $ case event of
     EventKey (SpecialKey k) action _ _ ->
       state
@@ -91,7 +91,9 @@ handleInput event state@GlobalState {..} = setMousePosition (maybeMousePosFromEv
               }
     _ -> state
   where
-    setMousePosition position gState@GlobalState {..} = gState {mousePosition = position}
+    setMousePosition position gState@GlobalState {..}
+      | GameScreen world@World {..} <- screen = gState {screen = GameScreen world {mousePosition = position}}
+      | otherwise = gState
 
 -- (left/right, bottom), top unlimited
 levelBoundary :: (Float, Float)
@@ -106,10 +108,10 @@ vmax = 300
 betweenSpeed :: Float -> Float -> Float
 betweenSpeed vmax v = max (-vmax) (min vmax v)
 
-maybeMousePosFromEvent :: Event -> Maybe (Float, Float)
-maybeMousePosFromEvent (EventKey _ _ _ pos) = Just pos
-maybeMousePosFromEvent (EventMotion pos) = Just pos
-maybeMousePosFromEvent _ = Nothing
+mousePosFromEvent :: Event -> (Float, Float)
+mousePosFromEvent (EventKey _ _ _ pos) = pos
+mousePosFromEvent (EventMotion pos) = pos
+mousePosFromEvent _ = (0, 0)
 
 update :: Float -> GlobalState -> GlobalState
 update t state@GlobalState {..} =

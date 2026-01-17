@@ -37,16 +37,7 @@ import View.Frog (
 render :: GlobalState -> Picture
 render GlobalState {..} = case screen of
   StartScreen -> blank
-  GameScreen world@World {..} ->
-    pictures
-      [ case jump of
-          Nothing -> blank
-          Just j -> case j of
-            InitJump m -> line $ catMaybes [mousePosition, Just m]
-            Jump {} -> blank,
-        text (show mousePosition),
-        renderWorld (assets uiState) world
-      ]
+  GameScreen world -> renderWorld (assets uiState) world
   HighScoreScreen -> blank
 
 renderWorld :: Assets -> World -> Picture
@@ -57,9 +48,12 @@ renderWorld
       ..
     } =
     pictures
-      $
-      -- player sprite
-      characterBubble assets
+      $ case jump of
+        Just (InitJump m) -> line [m, mousePosition]
+        Nothing -> blank
+        :
+        -- player sprite
+        characterBubble assets
         : frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
         :
         -- other stuff in the scene
