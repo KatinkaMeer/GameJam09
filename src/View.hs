@@ -5,35 +5,45 @@ module View (render) where
 import Graphics.Gloss (
   Picture (Pictures),
   black,
+  blank,
   circleSolid,
   color,
   pictures,
   rectangleSolid,
   translate,
  )
+
+import Model (
+  Assets (..),
+  GlobalState (..),
+  Object (Object, position),
+  Screen (..),
+  UiState (UiState, assets),
+  World (..),
+  objectDataToPicture,
+ )
 import View.Frog (
   FrogState (FrogState, eyesOpen, mouthOpen),
   frogSprite,
  )
 
-import Model (
-  Assets (..),
-  Object (Object, position),
-  World (..),
-  objectDataToPicture,
- )
+render :: GlobalState -> Picture
+render GlobalState {..} = case screen of
+  StartScreen -> blank
+  GameScreen world -> renderWorld (assets uiState) world
+  HighScoreScreen -> blank
 
-render :: World -> Picture
-render
+renderWorld :: Assets -> World -> Picture
+renderWorld
+  assets
   World
     { character = Object {position = (x, y)},
-      assets = assets@Assets {player = playerSprite, ..},
       ..
     } =
     pictures
       $
       -- player sprite
-      bubble
+      bubble assets
         : frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
         :
         -- other stuff in the scene

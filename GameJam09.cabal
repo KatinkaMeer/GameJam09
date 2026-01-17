@@ -60,6 +60,8 @@ library
     View,
     Controller,
     Sound
+  other-modules:
+    View.Frog
   hs-source-dirs:
     src
   build-depends:

@@ -26,29 +26,41 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
 import Model (
   Assets (..),
   CharacterStatus (..),
+  GlobalState (..),
   Jump (..),
   Object (..),
+  Screen (..),
+  UiState (..),
   World (..),
   characterFloats,
   characterInBalloon,
   characterInBubble,
+  initialWorld,
  )
 
-handleInput :: Event -> World -> World
-handleInput event world@World {..} =
+handleInput :: Event -> GlobalState -> GlobalState
+handleInput event state@GlobalState {..} =
   case event of
     EventKey (SpecialKey k) action _ _ ->
-      world
-        { pressedKeys = case action of
-            Down -> k : pressedKeys
-            Up -> delete k pressedKeys
+      state
+        { uiState =
+            uiState
+              { pressedKeys = case action of
+                  Down -> k : pressedKeys uiState
+                  Up -> delete k $ pressedKeys uiState
+              }
         }
     EventKey (MouseButton LeftButton) Down _ mpos
-      | isNothing jump,
+      | GameScreen world@World {..} <- screen,
+        isNothing jump,
         characterFloats characterStatus ->
-          world {jump = Just InitJump {mousePoint = mpos}}
+          state
+            { screen =
+                GameScreen world {jump = Just InitJump {mousePoint = mpos}}
+            }
     EventKey (MouseButton LeftButton) Up _ mpos
-      | Just InitJump {..} <- jump,
+      | GameScreen world@World {..} <- screen,
+        Just InitJump {..} <- jump,
         characterFloats characterStatus ->
           let
             -- TODO add minimum velocity and maximum velocity as variables
@@ -59,18 +71,23 @@ handleInput event world@World {..} =
             vx = mposx - rposx
             vy = mposy - rposy
             v2 = vx * vx + vy * vy
-            rv = sqrt $ v2 / (max 1 $ min v2 100)
+            rv = sqrt $ v2 / max 1 (min v2 100)
             vx' = vx / rv
             vy' = vy / rv
           in
-            world
-              { character =
-                  character
-                    { velocity = velocity character P.+ (vx', vy') -- galilei
-                    },
-                jump = Nothing -- new Jump possible
+            state
+              { screen =
+                  GameScreen
+                    world
+                      { character =
+                          character
+                            { velocity = velocity character P.+ (vx', vy')
+                            -- galilei
+                            },
+                        jump = Nothing -- new Jump possible
+                      }
               }
-    _ -> world
+    _ -> state
 
 -- (left/right, bottom), top unlimited
 levelBoundary :: (Float, Float)
@@ -81,44 +98,59 @@ moveSpeed = 300
 floatSpeed = 60
 fallSpeed = 200
 
-update :: Float -> World -> World
-update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, ..} =
-  world
-    { character =
-        me
-          { position =
-              coordinateClamp
-                ( x + moveSpeed * t * modifier,
-                  y + yChange
-                )
-          },
-      characterStatus = updateCharacterStatus,
-      collisionIndex = findIndex collisionWithPlayer objects,
-      assets = case updateCharacterStatus of
-        CharacterInBubble toPop
-          -- cannot stack color, e.g. color red $ color yellow ...
-          -- is just color yellow ...
-          | toPop < 3 -> a {bubble = color red $ circleSolid 30}
-          | toPop < 7 -> a {bubble = color yellow bubble}
-        PlainCharacter -> a {bubble = blank}
-        _ -> a
+update :: Float -> GlobalState -> GlobalState
+update t state@GlobalState {..} =
+  state
+    { screen = case screen of
+        StartScreen -> GameScreen initialWorld
+        GameScreen world -> GameScreen $ updateWorld t uiState world
+        HighScoreScreen -> StartScreen
     }
-  where
-    modifier
-      | KeyLeft `elem` pressedKeys = -1
-      | KeyRight `elem` pressedKeys = 1
-      | otherwise = 0
 
-    (yChange, updateCharacterStatus) = case characterStatus of
-      CharacterInBalloon timer -> (2 * t * floatSpeed, characterInBalloon $ timerUpdate timer)
-      CharacterInBubble timer -> (t * floatSpeed, characterInBubble $ timerUpdate timer)
-      PlainCharacter -> (-t * fallSpeed, PlainCharacter)
+updateWorld :: Float -> UiState -> World -> World
+updateWorld
+  t
+  UiState {..}
+  world@World {character = me@(Object (x, y) _), ..} =
+    world
+      { character =
+          me
+            { position =
+                coordinateClamp
+                  ( x + moveSpeed * t * modifier,
+                    y + yChange
+                  )
+            },
+        characterStatus = updateCharacterStatus,
+        collisionIndex = findIndex collisionWithPlayer objects
+        {-
+        assets = case updateCharacterStatus of
+          CharacterInBubble toPop
+            -- cannot stack color, e.g. color red $ color yellow ...
+            -- is just color yellow ...
+            | toPop < 3 -> assets {bubble = color red $ circleSolid 30}
+            | toPop < 7 -> assets {bubble = color yellow bubble}
+          PlainCharacter -> assets {bubble = blank}
+          _ -> assets
+        -}
+      }
+    where
+      modifier
+        | KeyLeft `elem` pressedKeys = -1
+        | KeyRight `elem` pressedKeys = 1
+        | otherwise = 0
 
-    timerUpdate = (- t)
+      (yChange, updateCharacterStatus) = case characterStatus of
+        CharacterInBalloon timer -> (2 * t * floatSpeed, characterInBalloon $ timerUpdate timer)
+        CharacterInBubble timer -> (t * floatSpeed, characterInBubble $ timerUpdate timer)
+        PlainCharacter -> ((-t) * fallSpeed, PlainCharacter)
 
-    coordinateClamp (xCoord, yCoord) =
-      ( if abs xCoord > fst levelBoundary then x else xCoord,
-        if yCoord < snd levelBoundary then y else yCoord
-      )
-    -- CHANGE THIS
-    collisionWithPlayer (_, Object {position = (oX, oY)}) = sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 20
+      timerUpdate = (- t)
+
+      coordinateClamp (xCoord, yCoord) =
+        ( if abs xCoord > fst levelBoundary then x else xCoord,
+          if yCoord < snd levelBoundary then y else yCoord
+        )
+      -- CHANGE THIS
+      collisionWithPlayer (_, Object {position = (oX, oY)}) =
+        sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 20
