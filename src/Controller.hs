@@ -12,7 +12,7 @@ import Graphics.Gloss.Interface.Pure.Game (
   SpecialKey (KeyDown, KeyLeft, KeyRight, KeyUp),
  )
 
-import Model (Object (Object, position), World (World, character, pressedKeys))
+import Model (Object (Object, position), World (..), CharacterStatus (..))
 
 handleInput :: Event -> World -> World
 handleInput event world@World {..} =
@@ -25,16 +25,23 @@ handleInput event world@World {..} =
         }
     _ -> world
 
-moveSpeed, floatSpeed :: Float
+moveSpeed, floatSpeed, fallSpeed :: Float
 moveSpeed = 300
 floatSpeed = 60
+fallSpeed = 200
 
 update :: Float -> World -> World
 update t world@World {character = me@(Object (x, y) _), ..} =
   world
     { character =
         me
-          { position = (x + moveSpeed * t * modifier, y + t * floatSpeed)
+          { position =
+              ( x + moveSpeed * t * modifier,
+                case characterStatus of
+                  CharacterInBalloon -> y + 2 * t * floatSpeed
+                  CharacterInBubble -> y + t * floatSpeed
+                  PlainCharacter ->  y - t * fallSpeed
+              )
           }
     }
   where

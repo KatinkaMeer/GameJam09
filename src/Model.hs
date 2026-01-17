@@ -1,10 +1,11 @@
-module Model
-  ( Jump (..),
-    Object (..),
-    World (..),
-    Assets (..),
-    initialWorld,
-  )
+module Model (
+  CharacterStatus (..),
+  Jump (..),
+  Object (..),
+  World (..),
+  Assets (..),
+  initialWorld,
+)
 where
 
 import Graphics.Gloss (Picture, Point, Vector)
@@ -22,16 +23,19 @@ data Jump = Jump
     speed :: !Float
   }
 
-data MovingObject
+data CharacterStatus
+  = CharacterInBalloon
+  | CharacterInBubble
+  | PlainCharacter
 
 data Assets = Assets
-  { player :: Picture,
-    bubble :: Picture
+  { player :: !Picture,
+    bubble :: !Picture
   }
 
 data World = World
   { character :: !Object,
-    characterInBubble :: !Bool,
+    characterStatus :: !CharacterStatus,
     viewport :: !Object,
     jump :: !(Maybe Jump),
     pressedKeys :: ![SpecialKey],
@@ -43,7 +47,7 @@ initialWorld :: Assets -> World
 initialWorld assets =
   World
     { character = Object (0, 0) (0, 0),
-      characterInBubble = True,
+      characterStatus = CharacterInBubble,
       viewport = Object (0, 0) (0, 0),
       jump = Nothing,
       pressedKeys = [],

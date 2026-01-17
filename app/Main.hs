@@ -2,8 +2,9 @@
 
 module Main where
 
-import Controller
 import Graphics.Gloss
+
+import Controller
 import Model
 import View
 
