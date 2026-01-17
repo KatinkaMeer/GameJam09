@@ -7,7 +7,7 @@
 dist-newstyle/
 dist/
 flake.lock
-result/
+result
 stack.yaml.lock
 *.kra~
 .idea
