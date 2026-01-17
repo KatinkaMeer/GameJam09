@@ -21,7 +21,7 @@ jobs:
           - { resolver: lts-22.44 }
         include:
           - os: ubuntu-latest
-            apt: freeglut3-dev
+            apt: "freeglut3-dev libalut-dev libopenal-dev"
 
     runs-on: ${{ matrix.os }}
 
