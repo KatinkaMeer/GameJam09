@@ -11,13 +11,51 @@ import Control.Concurrent
 import Control.Monad
 import Data.IORef
 import Data.List
+import Data.Map (Map)
 import Sound.ALUT
 import System.IO.Unsafe
 import System.Random (randomRIO)
 
-soundBuffer :: IORef (Maybe Sound.ALUT.Buffer)
-{-# NOINLINE soundBuffer #-}
-soundBuffer = unsafePerformIO $ newIORef Nothing
+import Data.Map qualified as M
+
+data SoundTrack = SoundTrack
+  { ioRef :: !(IORef (Maybe Sound.ALUT.Buffer)),
+    fileName :: !FilePath
+  }
+
+data SoundName
+  = BalloonInflate
+  | BalloonPop1
+  | BalloonPop2
+  | BubblePop1
+  | BubblePop2
+  | BubblePop3
+  | BubblePop4
+  | BubblePop5
+  | BubblePop6
+  | BubblePop7
+  | BubblePop8
+  | Bubbles
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+allSoundTracks :: Map SoundName SoundTrack
+{-# NOINLINE allSoundTracks #-}
+allSoundTracks =
+  unsafePerformIO
+    $ foldM
+      ( \sounds track -> do
+          ioRef <- newIORef Nothing
+          pure
+            $ M.insert
+              track
+              SoundTrack
+                { ioRef = ioRef,
+                  fileName = "assets/sounds/" ++ show track ++ ".wav"
+                }
+              sounds
+      )
+      M.empty
+      [minBound .. maxBound]
 
 waitUntilSoundPlaybackFinished :: Source -> IO ()
 waitUntilSoundPlaybackFinished source = do
@@ -28,14 +66,14 @@ waitUntilSoundPlaybackFinished source = do
       waitUntilSoundPlaybackFinished source
     _ -> return ()
 
-playFile :: FilePath -> IO ()
-playFile fileName = do
-  mBuf <- readIORef soundBuffer
+playFile :: SoundName -> IO ()
+playFile name = do
+  mBuf <- readIORef ioRef
   buf <- case mBuf of
     Just b -> return b
     Nothing -> do
       b <- createBuffer (File fileName)
-      writeIORef soundBuffer (Just b)
+      writeIORef ioRef (Just b)
       return b
   source <- genObjectName
   buffer source $= Just buf
@@ -44,37 +82,27 @@ playFile fileName = do
     -- threadDelay 1000000 -- 1s
     waitUntilSoundPlaybackFinished source
     deleteObjectNames [source]
+  where
+    SoundTrack {ioRef, fileName} = allSoundTracks M.! name
 
 playBubblesSound :: IO ()
-playBubblesSound = playFile "assets/sounds/bubbles.wav"
+playBubblesSound = playFile Bubbles
 
 playBubblePopSound :: IO ()
 playBubblePopSound =
-  playRandomFile
-    [ "assets/sounds/bubble-pop1.wav",
-      "assets/sounds/bubble-pop-2.wav",
-      "assets/sounds/bubble-pop-3.wav",
-      "assets/sounds/bubble-pop-4.wav",
-      "assets/sounds/bubble-pop-5.wav",
-      "assets/sounds/bubble-pop-6.wav",
-      "assets/sounds/bubble-pop-7.wav",
-      "assets/sounds/bubble-pop-8.wav"
-    ]
+  playRandomFile [BubblePop1 .. BubblePop8]
 
 playBalloonInflateSound :: IO ()
-playBalloonInflateSound = playFile "assets/sounds/inflate.wav"
+playBalloonInflateSound = playFile BalloonInflate
 
 playBalloonPopSound :: IO ()
 playBalloonPopSound =
-  playRandomFile
-    [ "assets/sounds/balloon-pop-1.wav",
-      "assets/sounds/balloon-pop-2.wav"
-    ]
+  playRandomFile [BalloonPop1 .. BalloonPop2]
 
-playRandomFile :: [FilePath] -> IO ()
-playRandomFile fileNames = do
-  fileName <- pickRandom fileNames
-  playFile fileName
+playRandomFile :: [SoundName] -> IO ()
+playRandomFile names = do
+  name <- pickRandom names
+  playFile name
 
 pickRandom :: [a] -> IO a
 pickRandom xs = do

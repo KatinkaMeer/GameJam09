@@ -79,8 +79,8 @@ data Jump
       }
 
 data CharacterStatus
-  = CharacterInBalloon Float
-  | CharacterInBubble Float
+  = CharacterAtBalloon !Float
+  | CharacterInBubble !Float
   | PlainCharacter
   deriving Eq
 
@@ -92,10 +92,10 @@ characterInBubble t
 characterInBalloon :: Float -> CharacterStatus
 characterInBalloon t
   | t <= 0 = PlainCharacter
-  | otherwise = CharacterInBalloon t
+  | otherwise = CharacterAtBalloon t
 
 characterFloats :: CharacterStatus -> Bool
-characterFloats (CharacterInBalloon _) = True
+characterFloats (CharacterAtBalloon _) = True
 characterFloats (CharacterInBubble _) = True
 characterFloats _ = False
 
@@ -108,7 +108,7 @@ data Assets = Assets
     frogEyesOpen :: !Picture,
     frogEyesClosed :: !Picture,
     frogMouth :: !Picture,
-    cloud :: Picture
+    cloud :: !Picture
   }
 
 data World = World
@@ -120,13 +120,14 @@ data World = World
     jump :: !(Maybe Jump),
     mousePosition :: !(Float, Float),
     objects :: !(Map Integer (ObjectType, Object)),
-    nextId :: Integer
+    nextId :: !Integer
   }
 
 objectDataToPicture :: Assets -> (ObjectType, Object) -> Picture
-objectDataToPicture Assets {..} (oType, Object {..}) = uncurry translate position $ case oType of
-  Bubble -> bubble
-  _ -> undefined
+objectDataToPicture Assets {..} (oType, Object {..}) =
+  uncurry translate position $ case oType of
+    Bubble -> bubble
+    _ -> undefined
 
 initialWorld :: World
 initialWorld =

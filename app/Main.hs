@@ -3,6 +3,7 @@
 module Main where
 
 import Graphics.Gloss
+import Graphics.Gloss.Interface.IO.Game (playIO)
 
 import Controller
 import Model
@@ -37,14 +38,14 @@ loadSprites = do
 
 main :: IO ()
 main =
-  withProgNameAndArgs runALUT $ \progName args -> do
+  withProgNameAndArgs runALUT $ \_ _ -> do
     playBubblesSound
     assets <- loadSprites
-    play
+    playIO
       (InWindow "GlossyGaming" (500, 500) (10, 10))
       green
       60
       (initialGlobalState assets)
-      render
-      handleInput
+      (pure . render)
+      (\event -> pure . handleInput event)
       update

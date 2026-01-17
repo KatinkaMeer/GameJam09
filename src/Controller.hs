@@ -38,6 +38,7 @@ import Model (
   characterInBubble,
   initialWorld,
  )
+import Sound (playBalloonInflateSound, playBalloonPopSound, playBubblePopSound)
 
 handleInput :: Event -> GlobalState -> GlobalState
 handleInput event state@GlobalState {..} = setMousePosition (mousePosFromEvent event)
@@ -113,42 +114,48 @@ mousePosFromEvent (EventKey _ _ _ pos) = pos
 mousePosFromEvent (EventMotion pos) = pos
 mousePosFromEvent _ = (0, 0)
 
-update :: Float -> GlobalState -> GlobalState
-update t state@GlobalState {..} =
-  state
-    { screen = case screen of
-        StartScreen -> GameScreen initialWorld
-        GameScreen world -> GameScreen $ updateWorld t uiState world
-        HighScoreScreen -> StartScreen
-    }
+update :: Float -> GlobalState -> IO GlobalState
+update t state@GlobalState {..} = do
+  nextScreen <- case screen of
+    StartScreen -> pure $ GameScreen initialWorld
+    GameScreen world -> GameScreen <$> updateWorld t uiState world
+    HighScoreScreen -> pure StartScreen
+  pure $ state {screen = nextScreen}
 
-updateWorld :: Float -> UiState -> World -> World
+updateWorld :: Float -> UiState -> World -> IO World
 updateWorld
   t
   UiState {..}
-  world@World {character = me@(Object (x, y) (vx, vy)), ..} =
-    world
-      { character =
-          me
-            { position =
-                coordinateClamp
-                  ( x + moveSpeed * t * modifier + vx' * t,
-                    y + vy' * t
-                  ),
-              velocity = (vx', vy')
-            },
-        characterStatus = updateCharacterStatus,
-        collisions = M.keys $ M.filter collisionWithPlayer objects,
-        -- TODO: use and increment or increment every update
-        nextId = nextId
-      }
+  world@World {character = me@(Object (x, y) (vx, vy)), ..} = do
+    case (characterStatus, updateCharacterStatus) of
+      (CharacterAtBalloon {}, PlainCharacter) -> playBalloonPopSound
+      (PlainCharacter, CharacterAtBalloon {}) -> playBalloonInflateSound
+      (CharacterInBubble {}, PlainCharacter) -> playBubblePopSound
+      (PlainCharacter, CharacterInBubble {}) -> playBubblePopSound
+      _ -> pure ()
+    pure
+      world
+        { character =
+            me
+              { position =
+                  coordinateClamp
+                    ( x + moveSpeed * t * modifier + vx' * t,
+                      y + vy' * t
+                    ),
+                velocity = (vx', vy')
+              },
+          characterStatus = updateCharacterStatus,
+          collisions = M.keys $ M.filter collisionWithPlayer objects,
+          -- TODO: use and increment or increment every update
+          nextId = nextId
+        }
     where
       modifier
         | KeyLeft `elem` pressedKeys = -1
         | KeyRight `elem` pressedKeys = 1
         | otherwise = 0
       (vx', vy', updateCharacterStatus) = case characterStatus of
-        CharacterInBalloon timer -> (vx, betweenSpeed vmax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
+        CharacterAtBalloon timer -> (vx, betweenSpeed vmax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
         CharacterInBubble timer -> (vx, betweenSpeed vmax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
         PlainCharacter -> (vx, betweenSpeed vmax (vy - t * fallSpeed), PlainCharacter)
 
