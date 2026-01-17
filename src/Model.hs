@@ -2,10 +2,11 @@ module Model (
   Jump (..),
   Object (..),
   World (..),
+  Assets (..),
   initialWorld,
 ) where
 
-import Graphics.Gloss (Point, Vector)
+import Graphics.Gloss (Point, Vector, Picture)
 import Graphics.Gloss.Interface.Pure.Game (SpecialKey)
 
 data Object = Object
@@ -22,22 +23,29 @@ data Jump = Jump
 
 data MovingObject
 
+data Assets = Assets
+ {  player :: Picture,
+    bubble :: Picture
+  }
+
 data World = World
   { character :: !Object,
     characterInBubble :: !Bool,
     viewport :: !Object,
     jump :: !(Maybe Jump),
     pressedKeys :: ![SpecialKey],
-    objects :: ![(ObjectType, Object)]
+    objects :: ![(ObjectType, Object)],
+    assets :: !Assets
   }
 
-initialWorld :: World
-initialWorld =
+initialWorld :: Assets -> World
+initialWorld assets =
   World
     { character = Object (0, 0) (0, 0),
       characterInBubble = True,
       viewport = Object (0, 0) (0, 0),
       jump = Nothing,
       pressedKeys = [],
-      objects = []
+      objects = [],
+      assets = assets
     }

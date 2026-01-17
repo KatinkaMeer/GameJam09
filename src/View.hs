@@ -5,7 +5,6 @@ module View (render) where
 import Graphics.Gloss (
   Picture,
   black,
-  blank,
   circleSolid,
   color,
   pictures,
@@ -13,14 +12,14 @@ import Graphics.Gloss (
   translate,
  )
 
-import Model (Object (Object, position), World (World, character))
+import Model (Object (Object, position), World (World, character, assets), Assets (Assets, player))
 
 render :: World -> Picture
-render World {character = Object {position = (x, y)}, ..} =
+render World {character = Object {position = (x, y)}, assets = Assets {player = playerSprite, ..},..} =
   pictures
     $
     -- player sprite
-    color black (circleSolid 25)
+    playerSprite
       :
       -- other stuff in the scene
       map
