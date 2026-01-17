@@ -68,6 +68,6 @@ initialWorld assets =
       viewport = Object (0, 0) (0, 0),
       jump = Nothing,
       pressedKeys = [],
-      objects = [],
+      objects = [(Bubble, Object {position = (80,40), velocity = (0,0)})],
       assets = assets
     }
