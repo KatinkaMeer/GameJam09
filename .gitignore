@@ -8,3 +8,4 @@ dist-newstyle/
 dist/
 stack.yaml.lock
 *.kra~
+.idea
