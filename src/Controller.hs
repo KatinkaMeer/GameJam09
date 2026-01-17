@@ -69,10 +69,10 @@ handleInput event state@GlobalState {..} = setMousePosition (mousePosFromEvent e
             rposy = snd mousePoint
             mposx = fst mpos
             mposy = snd mpos
-            vx = 100 * (rposx - mposx)
-            vy = 100 * (rposy - mposx)
+            vx = 1000 * (rposx - mposx)
+            vy = 1000 * (rposy - mposy)
             v2 = vx * vx + vy * vy
-            rv = sqrt $ v2 / max 1 (min v2 100)
+            rv = sqrt $ v2 / max 1 (min v2 1000000)
             vx' = vx / rv
             vy' = vy / rv
           in
