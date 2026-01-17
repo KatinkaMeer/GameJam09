@@ -7,6 +7,7 @@ import Graphics.Gloss
 import Controller
 import Model
 import View
+import Sound hiding (play)
 
 loadSprites :: IO Assets
 loadSprites = do
@@ -19,7 +20,8 @@ loadSprites = do
 
 main :: IO ()
 main =
-  do
+  withProgNameAndArgs runALUT $ \progName args -> do
+    playBubblesSound
     assets <- loadSprites
     play
       (InWindow "GlossyGaming" (500, 500) (10, 10))
