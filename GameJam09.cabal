@@ -59,8 +59,9 @@ library
     Model,
     View,
     Controller,
-    Sound
+    Sound,
   other-modules:
+    HighScore,
     View.Frog
   hs-source-dirs:
     src
@@ -68,6 +69,8 @@ library
     base ^>=4.18.3.0,
     containers,
     extra,
+    directory,
+    filepath,
     gloss,
     ALUT,
     random
