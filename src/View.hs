@@ -15,6 +15,7 @@ import Graphics.Gloss (
 
 import Model (
   Assets (..),
+  CharacterStatus (..),
   GlobalState (..),
   Object (Object, position),
   Screen (..),
@@ -42,7 +43,7 @@ renderWorld
     } =
     pictures $
       -- player sprite
-      bubble assets
+      characterBubble assets
         : frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
         :
         -- other stuff in the scene
@@ -51,3 +52,9 @@ renderWorld
           ( translate (-250) 0 (rectangleSolid 100 1000)
               : map (objectDataToPicture assets) objects
           )
+    where
+      characterBubble = case characterStatus of
+        CharacterInBubble t
+          | t < 3 -> bubbleTimerDanger
+          | t < 7 -> bubbleTimerAttention
+        _ -> const blank

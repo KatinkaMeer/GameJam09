@@ -13,6 +13,10 @@ loadSprites :: IO Assets
 loadSprites = do
   player <- loadBMP "./assets/sprite.bmp"
   bubble <- loadBMP "./assets/bubble/bubble.bmp"
+  -- placeholder
+  bubbleTimerAttention <- loadBMP "./assets/bubble/bubble.bmp"
+  -- placeholder
+  bubbleTimerDanger <- loadBMP "./assets/bubble/bubble.bmp"
   frogBody <- loadBMP "./assets/frog/layers/body.bmp"
   frogEyesOpen <- loadBMP "./assets/frog/layers/eyes-open.bmp"
   frogEyesClosed <- loadBMP "./assets/frog/layers/eyes-closed.bmp"
@@ -22,6 +26,8 @@ loadSprites = do
     Assets
       { player,
         bubble,
+        bubbleTimerAttention,
+        bubbleTimerDanger,
         frogBody,
         frogEyesOpen,
         frogEyesClosed,

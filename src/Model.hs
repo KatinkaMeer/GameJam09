@@ -99,6 +99,8 @@ characterFloats _ = False
 data Assets = Assets
   { player :: !Picture,
     bubble :: !Picture,
+    bubbleTimerAttention :: !Picture,
+    bubbleTimerDanger :: !Picture,
     frogBody :: !Picture,
     frogEyesOpen :: !Picture,
     frogEyesClosed :: !Picture,

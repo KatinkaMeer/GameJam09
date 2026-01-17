@@ -129,16 +129,6 @@ updateWorld
             },
         characterStatus = updateCharacterStatus,
         collisionIndex = findIndex collisionWithPlayer objects
-        {-
-        assets = case updateCharacterStatus of
-          CharacterInBubble toPop
-            -- cannot stack color, e.g. color red $ color yellow ...
-            -- is just color yellow ...
-            | toPop < 3 -> assets {bubble = color red $ circleSolid 30}
-            | toPop < 7 -> assets {bubble = color yellow bubble}
-          PlainCharacter -> assets {bubble = blank}
-          _ -> assets
-        -}
       }
     where
       modifier
