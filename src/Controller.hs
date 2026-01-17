@@ -10,9 +10,12 @@ import Graphics.Gloss.Interface.Pure.Game (
   Key (SpecialKey),
   KeyState (Down, Up),
   SpecialKey (KeyDown, KeyLeft, KeyRight, KeyUp),
+  color,
+  red,
  )
 
 import Model (
+  Assets (..),
   CharacterStatus (..),
   Object (Object, position),
   World (..),
@@ -37,7 +40,7 @@ floatSpeed = 60
 fallSpeed = 200
 
 update :: Float -> World -> World
-update t world@World {character = me@(Object (x, y) _), ..} =
+update t world@World {character = me@(Object (x, y) _), assets = a@Assets {..}, ..} =
   world
     { character =
         me
@@ -46,7 +49,8 @@ update t world@World {character = me@(Object (x, y) _), ..} =
                 y + yChange
               )
           },
-      characterStatus = updateCharacterStatus
+      characterStatus = updateCharacterStatus,
+      assets = a {player = color red player}
     }
   where
     modifier
