@@ -76,6 +76,7 @@ library
   hs-source-dirs:
     src
   build-depends:
+    MonadRandom,
     base ^>=4.18.2.0,
     bytestring,
     containers,

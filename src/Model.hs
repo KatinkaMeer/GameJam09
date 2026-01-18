@@ -60,7 +60,8 @@ data Object = Object
   }
   deriving (Eq, Show)
 
-data ObjectType = Balloon | Bubble deriving Eq
+data ObjectType = Balloon | Bubble
+  deriving (Eq, Show)
 
 data Jump
   = Jump
@@ -117,7 +118,7 @@ data Assets = Assets
 
 data World = World
   { character :: !Object,
-    characterAltitude :: Float,
+    characterAltitude :: !Float,
     characterStatus :: !CharacterStatus,
     collisions :: ![Integer],
     elapsedTime :: !Float,

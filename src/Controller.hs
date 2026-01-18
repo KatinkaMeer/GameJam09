@@ -5,9 +5,11 @@ module Controller where
 
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.Fixed (mod')
+import Control.Monad.Random.Class (MonadRandom, fromList, getRandomR, uniform)
 import Data.List (delete, find, findIndex)
 import Data.Map (lookup, member)
 import Data.Maybe (isNothing, listToMaybe)
+import Data.Ratio ((%))
 import Data.Tuple.Extra (first, second)
 import Graphics.Gloss.Data.ViewPort (ViewPort (..))
 import Graphics.Gloss.Interface.Pure.Game (
@@ -23,6 +25,7 @@ import Graphics.Gloss.Interface.Pure.Game (
   yellow,
  )
 import System.Exit (exitSuccess)
+import System.Random (Random (random))
 
 import Data.Map qualified as M
 import HighScore (logNewHighScore)
@@ -187,8 +190,8 @@ update t state@GlobalState {..} = do
 updateWorld :: Float -> UiState -> World -> IO World
 updateWorld
   t
-  UiState {..}
-  world@World {character = me@(Object (x, y) (vx, vy)), viewport = v@ViewPort {..}, ..} =
+  uiState@UiState {..}
+  world@World {character = me@(Object (x, y) (vx, vy)), ..} =
     let
       modifier
         | KeyLeft `elem` pressedKeys = -1
@@ -240,6 +243,12 @@ updateWorld
           (PlainCharacter {}, CharacterInBubble {}) ->
             (Nothing, bonusPoints + 20) <$ playBubblePopSound
           _ -> pure (jump, bonusPoints)
+        randomNumber <- getRandomR (1 :: Int, 100)
+        spawnedObjects <-
+          if randomNumber < 10
+          then zip [nextId ..]
+            <$> mapM (const $ spawnObject uiState viewport) [1]
+          else pure []
         pure
           world
             { character =
@@ -254,11 +263,60 @@ updateWorld
               collisions = newCollisions,
               characterStatus = updateCharacterStatus,
               jump = nextJump,
+              nextId = nextId + fromIntegral (length spawnedObjects),
               -- remove objects colliding with player
-              objects = M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
-              viewport = v {viewPortScale = viewportScaling},
+              objects =
+                M.union (M.fromList spawnedObjects)
+                  $ M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
-              nextId = nextId,
+              viewport = viewport {viewPortScale = viewportScaling},
               bonusPoints = newBonusPoints,
               elapsedTime = (+ t) elapsedTime
             }
+
+scalingFactor :: Float
+scalingFactor = 1
+
+spawnObject
+  :: MonadRandom m
+  => UiState
+  -> ViewPort
+  -> m (ObjectType, Object)
+spawnObject
+  UiState {windowSize = (windowX, windowY)}
+  ViewPort {viewPortTranslate = (shiftX, shiftY), ..} = do
+    x <- (shiftX +) <$> getRandomR (halfWindowX * viewPortScale, maxX)
+    y <- (shiftY +) <$> getRandomR (halfWindowY * viewPortScale, maxY)
+    objectType <- fromList [(Bubble, 2 % 5), (Balloon, 3 % 5)]
+    object <- case objectType of
+      Bubble -> do
+        position <-
+          uniform
+            [ (-x - halfCharacterSize, y + halfCharacterSize),
+              (-x - halfCharacterSize, y - windowY * viewPortScale),
+              (-x - halfCharacterSize, -y - halfCharacterSize),
+              (x - windowX * viewPortScale, y + halfCharacterSize),
+              (x - windowX * viewPortScale, -y - halfCharacterSize),
+              (x + halfCharacterSize, y + halfCharacterSize),
+              (x + halfCharacterSize, y - windowY * viewPortScale),
+              (x + halfCharacterSize, -y - halfCharacterSize)
+            ]
+        vx <- getRandomR (-(vBubbleMax / 4), vBubbleMax / 4)
+        vy <- getRandomR (-(vBubbleMax / 4), vBubbleMax / 4)
+        pure $ Object {position = position, velocity = (vx, vy)}
+      Balloon -> do
+        position <-
+          uniform
+            [ (-x - halfCharacterSize, -y - halfCharacterSize),
+              (x - windowX * viewPortScale, -y - halfCharacterSize),
+              (x + halfCharacterSize, -y - halfCharacterSize)
+            ]
+        vx <- getRandomR (-(vBalloonMax / 4), vBalloonMax / 4)
+        pure $ Object {position = position, velocity = (vx, vBalloonMax)}
+    pure (objectType, object)
+    where
+      halfWindowX = windowX / 2
+      halfWindowY = windowY / 2
+      maxX = max (halfWindowX * viewPortScale * 3) (maxJumpDistance vPlainCharacterMax / 1000)
+      maxY = max (halfWindowY * viewPortScale * 3) (maxJumpDistance vPlainCharacterMax / 1000)
+      halfCharacterSize = 64
