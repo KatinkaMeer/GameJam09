@@ -106,10 +106,14 @@ data Assets = Assets
     bubble :: !Picture,
     bubbleTimerAttention :: !Picture,
     bubbleTimerDanger :: !Picture,
-    frogBody :: !Picture,
-    frogEyesOpen :: !Picture,
-    frogEyesClosed :: !Picture,
-    frogMouth :: !Picture,
+    frogBodyRight :: !Picture,
+    frogBodyLeft :: !Picture,
+    frogEyesOpenRight :: !Picture,
+    frogEyesOpenLeft :: !Picture,
+    frogEyesClosedRight :: !Picture,
+    frogEyesClosedLeft :: !Picture,
+    frogMouthRight :: !Picture,
+    frogMouthLeft :: !Picture,
     cloud :: !Picture
   }
 

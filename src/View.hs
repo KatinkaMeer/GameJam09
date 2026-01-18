@@ -28,13 +28,12 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
  )
 
 import Math
-
 import Model (
   Assets (..),
   CharacterStatus (..),
   GlobalState (..),
   Jump (..),
-  Object (Object, position),
+  Object (Object, position, velocity),
   ObjectType (..),
   Screen (..),
   UiState (UiState, assets),
@@ -44,7 +43,7 @@ import Model (
  )
 import Sound (pause)
 import View.Frog (
-  FrogState (FrogState, eyesOpen, mouthOpen),
+  FrogState (FrogState, directionRight, eyesOpen, mouthOpen),
   frogSprite,
  )
 
@@ -66,7 +65,7 @@ renderWorld :: Assets -> World -> Picture
 renderWorld
   assets
   World
-    { character = Object {position = (x, y)},
+    { character = Object {position = (x, y), velocity = (vx, vy)},
       viewport = viewport@ViewPort {viewPortTranslate},
       ..
     } =
@@ -86,7 +85,7 @@ renderWorld
                     CharacterInBubble _ -> [characterBubble assets]
                     PlainCharacter -> []
                 )
-                  ++ [frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}]
+                  ++ [frogSprite assets FrogState {eyesOpen = True, mouthOpen = False, directionRight = vx >= 0}]
               )
           )
         : map renderObject (M.elems objects)

@@ -18,10 +18,14 @@ loadSprites = do
   bubbleTimerAttention <- loadBMP "./assets/bubble/bubble.bmp"
   -- placeholder
   bubbleTimerDanger <- loadBMP "./assets/bubble/bubble.bmp"
-  frogBody <- loadBMP "./assets/frog/layers/body.bmp"
-  frogEyesOpen <- loadBMP "./assets/frog/layers/eyes-open.bmp"
-  frogEyesClosed <- loadBMP "./assets/frog/layers/eyes-closed.bmp"
-  frogMouth <- loadBMP "./assets/frog/layers/mouth.bmp"
+  frogBodyRight <- loadBMP "./assets/frog/layers/body-right.bmp"
+  frogBodyLeft <- loadBMP "./assets/frog/layers/body-left.bmp"
+  frogEyesOpenRight <- loadBMP "./assets/frog/layers/eyes-open-right.bmp"
+  frogEyesOpenLeft <- loadBMP "./assets/frog/layers/eyes-open-left.bmp"
+  frogEyesClosedRight <- loadBMP "./assets/frog/layers/eyes-closed-right.bmp"
+  frogEyesClosedLeft <- loadBMP "./assets/frog/layers/eyes-closed-left.bmp"
+  frogMouthRight <- loadBMP "./assets/frog/layers/mouth-right.bmp"
+  frogMouthLeft <- loadBMP "./assets/frog/layers/mouth-left.bmp"
   cloud <- loadBMP "./assets/clouds/white.bmp"
   pure
     Assets
@@ -29,10 +33,14 @@ loadSprites = do
         bubble,
         bubbleTimerAttention,
         bubbleTimerDanger,
-        frogBody,
-        frogEyesOpen,
-        frogEyesClosed,
-        frogMouth,
+        frogBodyRight,
+        frogBodyLeft,
+        frogEyesOpenRight,
+        frogEyesOpenLeft,
+        frogEyesClosedRight,
+        frogEyesClosedLeft,
+        frogMouthRight,
+        frogMouthLeft,
         cloud
       }
 
