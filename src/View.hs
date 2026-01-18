@@ -27,6 +27,8 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (-),
  )
 
+import Math
+
 import Model (
   Assets (..),
   CharacterStatus (..),
@@ -45,18 +47,6 @@ import View.Frog (
   FrogState (FrogState, eyesOpen, mouthOpen),
   frogSprite,
  )
-
-scalarProduct :: Vector -> Vector -> Float
-scalarProduct (x1, y1) (x2, y2) = x1 * x2 + y1 * y2
-
-getNormVector :: Vector -> Vector
-getNormVector v = (1 / sqrt (scalarProduct v v)) P.* v
-
-betweenValues :: Float -> Float -> Float -> Float
-betweenValues lowlim value uplim = max lowlim (min value uplim)
-
-resizeVectorFactor :: Float -> Float -> Vector -> Float
-resizeVectorFactor lowlim uplim v = betweenValues lowlim (sqrt (scalarProduct v v)) uplim
 
 render :: GlobalState -> Picture
 render GlobalState {..} = case screen of
