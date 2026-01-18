@@ -4,6 +4,7 @@ module Sound (
   playBalloonPopSound,
   playBalloonInflateSound,
   playBubblePopSound,
+  playStartSound,
 )
 where
 
@@ -36,6 +37,7 @@ data SoundName
   | BubblePop7
   | BubblePop8
   | Bubbles
+  | StartSound
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 allSoundTracks :: Map SoundName SoundTrack
@@ -98,6 +100,9 @@ playBalloonInflateSound = playFile BalloonInflate
 playBalloonPopSound :: IO ()
 playBalloonPopSound =
   playRandomFile [BalloonPop1 .. BalloonPop2]
+
+playStartSound :: IO ()
+playStartSound = playFile StartSound
 
 playRandomFile :: [SoundName] -> IO ()
 playRandomFile names = do

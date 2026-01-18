@@ -95,20 +95,25 @@ handleInput event state@GlobalState {..} =
               vx' = vx / rv
               vy' = vy / rv
             in
-              pure
-                state
-                  { screen =
-                      GameScreen
-                        world
-                          { character =
-                              character
-                                { velocity = velocity character P.+ (vx', vy')
-                                -- galilei
-                                },
-                            characterStatus = PlainCharacter,
-                            jump = Nothing -- new Jump possible
-                          }
-                  }
+              do
+                case characterStatus of
+                  CharacterAtBalloon {} -> playBalloonPopSound
+                  CharacterInBubble {} -> playBubblePopSound
+                  PlainCharacter -> pure ()
+                pure
+                  state
+                    { screen =
+                        GameScreen
+                          world
+                            { character =
+                                character
+                                  { velocity = velocity character P.+ (vx', vy')
+                                  -- galilei
+                                  },
+                              characterStatus = PlainCharacter,
+                              jump = Nothing -- new Jump possible
+                            }
+                    }
       _ -> pure state
   where
     startGame = do

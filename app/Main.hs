@@ -39,7 +39,7 @@ loadSprites = do
 main :: IO ()
 main =
   withProgNameAndArgs runALUT $ \_ _ -> do
-    playBubblesSound
+    playStartSound
     assets <- loadSprites
     playIO
       (InWindow "GlossyGaming" (500, 500) (10, 10))
