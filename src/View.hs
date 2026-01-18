@@ -18,6 +18,7 @@ import Graphics.Gloss (
   text,
   translate,
  )
+import Graphics.Gloss.Data.ViewPort (ViewPort, applyViewPortToPicture)
 
 import Data.Map qualified as M
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
@@ -31,12 +32,14 @@ import Model (
   GlobalState (..),
   Jump (..),
   Object (Object, position),
+  ObjectType (..),
   Screen (..),
   UiState (UiState, assets),
   World (..),
   characterInBubble,
   objectDataToPicture,
  )
+import Sound (pause)
 import View.Frog (
   FrogState (FrogState, eyesOpen, mouthOpen),
   frogSprite,
@@ -75,25 +78,38 @@ renderWorld
     { character = Object {position = (x, y)},
       ..
     } =
-    pictures
+    applyViewPortToPicture viewport
+      $ pictures
       $ case jump of
         -- TODO add vectorLength variable infront that depends on strength
-        Just (InitJump m) -> line [resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition), (0, 0)]
+        Just (InitJump m) -> line [(x, y), resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
         Nothing -> blank
-        : ( case characterStatus of
-              CharacterAtBalloon _ -> [circleSolid 30] -- placeholder
-              CharacterInBubble _ -> [characterBubble assets]
-              PlainCharacter -> []
+        : translate
+          x
+          y
+          ( pictures
+              ( ( case characterStatus of
+                    CharacterAtBalloon _ -> [circleSolid 30] -- placeholder
+                    CharacterInBubble _ -> [characterBubble assets]
+                    PlainCharacter -> []
+                )
+                  ++ [frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}]
+              )
           )
-        ++ frogSprite assets FrogState {eyesOpen = True, mouthOpen = False}
-        : map
-          (translate (-x) (-y))
-          ( translate (-250) 0 (rectangleSolid 100 1000)
-              : M.elems (M.map (objectDataToPicture assets) objects)
-          )
+        : translate 500 500 (cloud assets)
+        : map renderObject (M.elems objects)
     where
       characterBubble = case characterStatus of
         CharacterInBubble t
           | t < 3 -> bubbleTimerDanger
           | t < 7 -> bubbleTimerAttention
         _ -> bubble
+
+      renderObject (t, Object {position}) =
+        uncurry
+          translate
+          position
+          ( case t of
+              Bubble -> bubble assets
+              Balloon -> circleSolid 30
+          )
