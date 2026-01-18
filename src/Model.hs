@@ -111,7 +111,12 @@ data Assets = Assets
     frogEyesClosedLeft :: !Picture,
     frogMouthRight :: !Picture,
     frogMouthLeft :: !Picture,
-    cloud :: !Picture
+    cloud :: !Picture,
+    ballonBlue :: !Picture,
+    ballonGreen :: !Picture,
+    ballonPink :: !Picture,
+    ballonRed :: !Picture,
+    ballonYellow :: !Picture
   }
 
 data World = World

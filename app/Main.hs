@@ -30,6 +30,11 @@ loadSprites = do
   frogMouthRight <- loadBMP "./assets/frog/layers/mouth-right.bmp"
   frogMouthLeft <- loadBMP "./assets/frog/layers/mouth-left.bmp"
   cloud <- loadBMP "./assets/clouds/white.bmp"
+  ballonBlue <- loadBMP "./assets/ballony/blue.bmp"
+  ballonGreen <- loadBMP "./assets/ballony/green.bmp"
+  ballonPink <- loadBMP "./assets/ballony/pink.bmp"
+  ballonRed <- loadBMP "./assets/ballony/red.bmp"
+  ballonYellow <- loadBMP "./assets/ballony/yellow.bmp"
   pure
     Assets
       { player,
@@ -44,7 +49,12 @@ loadSprites = do
         frogEyesClosedLeft,
         frogMouthRight,
         frogMouthLeft,
-        cloud
+        cloud,
+        ballonBlue,
+        ballonGreen,
+        ballonPink,
+        ballonRed,
+        ballonYellow
       }
 
 main :: IO ()
