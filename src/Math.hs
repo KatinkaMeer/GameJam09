@@ -1,5 +1,11 @@
 module Math where
 
+import Graphics.Gloss (Vector)
+import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
+  (*),
+  (-),
+ )
+
 scalarProduct :: Vector -> Vector -> Float
 scalarProduct (x1, y1) (x2, y2) = x1 * x2 + y1 * y2
 
