@@ -4,10 +4,12 @@
 module Controller where
 
 import Data.Bifunctor (second)
+import Data.Fixed (mod')
 import Data.List (delete, find, findIndex)
 import Data.Map (lookup, member)
 import Data.Maybe (isNothing, listToMaybe)
 import Data.Tuple.Extra (first, second)
+import Graphics.Gloss.Data.ViewPort (ViewPort (..))
 import Graphics.Gloss.Interface.Pure.Game (
   Event (EventKey, EventMotion),
   Key (MouseButton, SpecialKey),
@@ -83,7 +85,7 @@ handleInput event state@GlobalState {..} =
                     GameScreen world {jump = Just InitJump {mousePoint = mpos}}
                 }
       EventKey (MouseButton LeftButton) Up _ mpos
-        | GameScreen world@World {..} <- screen,
+        | GameScreen world@World {viewport = ViewPort {..}, ..} <- screen,
           Just InitJump {..} <- jump,
           characterFloats characterStatus ->
             let
@@ -95,7 +97,7 @@ handleInput event state@GlobalState {..} =
               vx = rposx - mposx
               vy = rposy - mposy
               direction = getNormVector (vx, vy)
-              magnitude = vMaxScale * 0.005 * (scalarProduct (vx, vy) (vx, vy))
+              magnitude = (vMaxScale * 0.005 * (scalarProduct (vx, vy) (vx, vy))) * ((1 - viewPortScale) + 1)
             in
               do
                 case characterStatus of
@@ -159,7 +161,7 @@ updateWorld :: Float -> UiState -> World -> IO World
 updateWorld
   t
   UiState {..}
-  world@World {character = me@(Object (x, y) (vx, vy)), ..} =
+  world@World {character = me@(Object (x, y) (vx, vy)), viewport = v@ViewPort {..}, ..} =
     let
       modifier
         | KeyLeft `elem` pressedKeys = -1
@@ -179,6 +181,13 @@ updateWorld
           )
 
       timerUpdate = (- t)
+
+      -- can't think of a good way to make this more generic
+      viewportScaling
+        | y > 2000 = 0.125
+        | y > 1000 = 0.25
+        | y > 500 = 0.5
+        | otherwise = 1
 
       coordinateClamp (xCoord, yCoord) =
         ( if abs xCoord > fst levelBoundary then x else xCoord,
@@ -220,6 +229,7 @@ updateWorld
               jump = nextJump,
               -- remove objects colliding with player
               objects = M.map (Data.Bifunctor.second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
+              viewport = v {viewPortScale = viewportScaling},
               -- TODO: use and increment or increment every update
               nextId = nextId,
               bonusPoints = newBonusPoints,
