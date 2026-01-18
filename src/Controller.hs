@@ -127,11 +127,14 @@ handleInput event state@GlobalState {..} =
 levelBoundary :: (Float, Float)
 levelBoundary = (500, -500)
 
-moveSpeed, floatSpeed, fallSpeed, vmax :: Float
+-- TODO should the initial game settings be resolved in another way?
+moveSpeed, floatSpeed, fallSpeed, vBalloonMax, vBubbleMax, vPlChMax :: Float
 moveSpeed = 300
 floatSpeed = 60
 fallSpeed = 200
-vmax = 300
+vBalloonMax = 400
+vBubbleMax = 100
+vPlChMax = 1000
 
 betweenSpeed :: Float -> Float -> Float
 betweenSpeed vmax v = max (-vmax) (min vmax v)
@@ -182,9 +185,9 @@ updateWorld
         | KeyRight `elem` pressedKeys = 1
         | otherwise = 0
       (vx', vy', updateCharacterStatus) = case characterStatus of
-        CharacterAtBalloon timer -> (vx, betweenSpeed vmax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
-        CharacterInBubble timer -> (vx, betweenSpeed vmax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
-        PlainCharacter -> (vx, betweenSpeed vmax (vy - t * fallSpeed), PlainCharacter)
+        CharacterAtBalloon timer -> (0.98 * betweenSpeed vBalloonMax vx, betweenSpeed vBalloonMax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
+        CharacterInBubble timer -> (0.97 * betweenSpeed vBubbleMax vx, betweenSpeed vBubbleMax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
+        PlainCharacter -> (0.99 * betweenSpeed vPlChMax vx, betweenSpeed vPlChMax (vy - t * fallSpeed), PlainCharacter)
 
       timerUpdate = (- t)
 
