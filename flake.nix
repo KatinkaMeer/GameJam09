@@ -19,7 +19,6 @@
 
         myDevTools = [
           stack-wrapped # Stack, haskell package manager
-
           hPkgs.ghc # GHC compiler in the desired version (will be available on PATH)
           hPkgs.ghcid # Continuous terminal Haskell compile checker
           hPkgs.fourmolu # Haskell formatter
@@ -74,8 +73,8 @@
           # so we have to point `LD_LIBRARY_PATH` to it.
           LD_LIBRARY_PATH = "${pkgs.freeglut}/lib";
           # Inform stack on where to find `libGL.so` and the concrete OpenGL library.
-          EXTRA_INCLUDE_DIRS="${pkgs.libGL}/include";
-          EXTRA_LIB_DIRS="${pkgs.libGL}/lib ${pkgs.libGLU}/lib";
+          #EXTRA_INCLUDE_DIRS="${pkgs.libGL}/include";
+          #EXTRA_LIB_DIRS="${pkgs.libGL}/lib ${pkgs.libGLU}/lib";
         };
       });
 }

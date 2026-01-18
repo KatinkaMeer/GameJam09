@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Model (
   CharacterStatus (..),
   GlobalState (..),
@@ -15,7 +13,6 @@ module Model (
   characterInBubble,
   initialGlobalState,
   initialWorld,
-  objectDataToPicture,
 )
 where
 
@@ -119,6 +116,7 @@ data Assets = Assets
 
 data World = World
   { character :: !Object,
+    characterAltitude :: Float,
     characterStatus :: !CharacterStatus,
     collisions :: ![Integer],
     elapsedTime :: !Float,
@@ -130,16 +128,11 @@ data World = World
     bonusPoints :: !Integer
   }
 
-objectDataToPicture :: Assets -> (ObjectType, Object) -> Picture
-objectDataToPicture Assets {..} (oType, Object {..}) =
-  uncurry translate position $ case oType of
-    Bubble -> bubble
-    _ -> undefined
-
 initialWorld :: World
 initialWorld =
   World
     { character = Object (0, 0) (0, 0),
+      characterAltitude = 0,
       characterStatus = CharacterInBubble 5,
       collisions = [],
       elapsedTime = 0,

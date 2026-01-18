@@ -60,6 +60,7 @@ library
     Model,
     View,
     Controller,
+    GlossyRuler,
     Sound,
   other-modules:
     HighScore,

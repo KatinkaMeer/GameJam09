@@ -15,9 +15,12 @@ import Graphics.Gloss (
   line,
   pictures,
   rectangleSolid,
+  red,
   scale,
   text,
   translate,
+  white,
+  yellow,
  )
 import Graphics.Gloss.Data.ViewPort (ViewPort (ViewPort), applyViewPortToPicture, viewPortTranslate)
 
@@ -28,6 +31,7 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (-),
  )
 
+import GlossyRuler (drawRuler)
 import Math
 import Model (
   Assets (..),
@@ -37,10 +41,9 @@ import Model (
   Object (Object, position, velocity),
   ObjectType (..),
   Screen (..),
-  UiState (UiState, assets),
+  UiState (UiState, assets, windowSize),
   World (..),
   characterInBubble,
-  objectDataToPicture,
  )
 import Sound (pause)
 import View.Frog (
@@ -59,11 +62,16 @@ render GlobalState {..} = case screen of
           (-2, text "Press H to view high scores"),
           (-4, text "Press ESC to quit the game")
         ]
-  GameScreen world -> pictures [text (show (bonusPoints world)), renderWorld (assets uiState) world]
+  GameScreen world ->
+    pictures
+      [ text (show (bonusPoints world)),
+        renderWorld (windowSize uiState) (assets uiState) world
+      ]
   HighScoreScreen -> blank
 
-renderWorld :: Assets -> World -> Picture
+renderWorld :: Vector -> Assets -> World -> Picture
 renderWorld
+  windowSize
   assets
   World
     { character = Object {position = (x, y), velocity = (vx, vy)},
@@ -73,6 +81,7 @@ renderWorld
     applyViewPortToPicture viewport
       $ pictures
       $ generateClouds viewPortTranslate
+        : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
         : case jump of
           -- TODO add vectorLength variable infront that depends on strength
           Just (InitJump m) -> line [(x, y), (x, y) P.+ resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
@@ -111,3 +120,12 @@ renderWorld
         translate x y
           $ pictures
           $ map (\i -> translate (mod' (137 * i) 1280 - 740) (mod' (271 * i) 720 - 360) (cloud assets)) [1 .. 7]
+      windowWidth = fst windowSize
+      windowHeight = snd windowSize
+      rightBorderPosition = (windowWidth / 2, 0)
+      rulerDimensions = (100, windowHeight)
+      rulerDimensionsX = fst rulerDimensions
+      rulerDimensionsY = snd rulerDimensions
+      rulerPosition = rightBorderPosition
+      rulerNumberOfTickMarks = 10
+      rulerIndicatedMeasurement = windowHeight / 2

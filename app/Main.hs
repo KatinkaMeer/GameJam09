@@ -10,6 +10,9 @@ import Model
 import Sound hiding (play)
 import View
 
+initialWindowPosition :: (Int, Int)
+initialWindowPosition = (10, 10)
+
 loadSprites :: IO Assets
 loadSprites = do
   player <- loadBMP "./assets/sprite.bmp"

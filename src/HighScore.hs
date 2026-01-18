@@ -1,12 +1,13 @@
 module HighScore (loadHighScores, logNewHighScore, readMaxAltitude, updateMaxAltitude) where
 
 import Control.Monad (unless)
-import Data.List (sortOn)
 import Data.Bifunctor (second)
-import qualified Data.ByteString.Char8 as BS
+import Data.List (sortOn)
 import System.Directory (XdgDirectory (XdgData), createDirectoryIfMissing, doesFileExist, getXdgDirectory)
-import System.FilePath ((<.>), (</>), dropFileName)
+import System.FilePath (dropFileName, (<.>), (</>))
 import System.IO (writeFile)
+
+import Data.ByteString.Char8 qualified as BS
 
 type HighScore = (String, (Int, Int))
 
@@ -14,7 +15,7 @@ ensureFileExists :: FilePath -> IO ()
 ensureFileExists path = do
   createDirectoryIfMissing True (dropFileName path)
   fileExists <- doesFileExist path
-  unless fileExists $ BS.writeFile path (BS.pack"")
+  unless fileExists $ BS.writeFile path (BS.pack "")
 
 loadHighScores :: IO [HighScore]
 loadHighScores = highScoreFile >>= readHighScores
@@ -32,6 +33,7 @@ readHighScores path = do
       where
         (name, score) = second (drop 2) $ break (== ',') line
         (points, altitude) = second (drop 2) $ break (== ',') score
+
 -- Example line:
 -- Kati, 40000, 799089
 -- name^^score^^meters
@@ -59,14 +61,14 @@ maxAltitudeFile = getXdgDirectory XdgData $ "gamejam09" </> "max_altitude" <.> "
 
 readMaxAltitude :: IO Integer
 readMaxAltitude = do
-    path <- maxAltitudeFile
-    ensureFileExists path
-    content <- BS.unpack <$> BS.readFile path
-    if null content
-      then pure 0
-      else pure (read content)
+  path <- maxAltitudeFile
+  ensureFileExists path
+  content <- BS.unpack <$> BS.readFile path
+  if null content
+    then pure 0
+    else pure (read content)
 
 updateMaxAltitude :: Integer -> IO ()
 updateMaxAltitude altitude = do
-    path <- maxAltitudeFile
-    writeFile path (show altitude)
+  path <- maxAltitudeFile
+  writeFile path (show altitude)

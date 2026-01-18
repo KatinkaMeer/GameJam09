@@ -3,7 +3,7 @@
 
 module Controller where
 
-import Data.Bifunctor (second)
+import Data.Bifunctor (Bifunctor (bimap))
 import Data.Fixed (mod')
 import Data.List (delete, find, findIndex)
 import Data.Map (lookup, member)
@@ -11,7 +11,7 @@ import Data.Maybe (isNothing, listToMaybe)
 import Data.Tuple.Extra (first, second)
 import Graphics.Gloss.Data.ViewPort (ViewPort (..))
 import Graphics.Gloss.Interface.Pure.Game (
-  Event (EventKey, EventMotion),
+  Event (EventKey, EventMotion, EventResize),
   Key (MouseButton, SpecialKey),
   KeyState (Down, Up),
   MouseButton (LeftButton),
@@ -97,7 +97,9 @@ handleInput event state@GlobalState {..} =
               vx = rposx - mposx
               vy = rposy - mposy
               direction = getNormVector (vx, vy)
-              magnitude = (vMaxScale * 0.005 * (scalarProduct (vx, vy) (vx, vy))) * ((1 - viewPortScale) + 1)
+              magnitude =
+                (vMaxScale * 0.005 * scalarProduct (vx, vy) (vx, vy))
+                  * ((1 - viewPortScale) + 1)
             in
               do
                 case characterStatus of
@@ -118,6 +120,14 @@ handleInput event state@GlobalState {..} =
                               jump = Nothing -- new Jump possible
                             }
                     }
+      EventResize newSize ->
+        pure
+          state
+            { uiState =
+                uiState
+                  { windowSize = bimap fromIntegral fromIntegral newSize
+                  }
+            }
       _ -> pure state
   where
     startGame = do
@@ -228,7 +238,7 @@ updateWorld
               characterStatus = updateCharacterStatus,
               jump = nextJump,
               -- remove objects colliding with player
-              objects = M.map (Data.Bifunctor.second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
+              objects = M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               viewport = v {viewPortScale = viewportScaling},
               -- TODO: use and increment or increment every update
               nextId = nextId,

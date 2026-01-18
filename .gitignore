@@ -2,6 +2,7 @@
 *.o
 *.swp
 .DS_Store
+.idea
 .stack-work/
 .vscode/
 dist-newstyle/
@@ -11,4 +12,3 @@ result
 stack.yaml.lock
 *.kra~
 *.kra-autosave.kra
-.idea
