@@ -112,7 +112,7 @@ renderWorld
           position
           ( case t of
               Bubble -> bubble assets
-              Balloon -> circleSolid 30
+              Balloon -> ballonRed assets
           )
 
       -- using prime factors and the screen size as modulo 'ransomly' scatters the clouds can
