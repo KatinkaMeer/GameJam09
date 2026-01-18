@@ -10,4 +10,5 @@ flake.lock
 result
 stack.yaml.lock
 *.kra~
+*.kra-autosave.kra
 .idea
