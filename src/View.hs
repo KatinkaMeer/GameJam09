@@ -107,6 +107,7 @@ renderWorld
           )
 
       -- using prime factors and the screen size as modulo 'ransomly' scatters the clouds can
-      generateClouds translation =
-        pictures
+      generateClouds (x, y) =
+        translate x y
+          $ pictures
           $ map (\i -> translate (mod' (137 * i) 1280 - 740) (mod' (271 * i) 720 - 360) (cloud assets)) [1 .. 7]
