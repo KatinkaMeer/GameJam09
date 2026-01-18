@@ -2,30 +2,126 @@
 
 module View (render) where
 
+import Data.Bifunctor (Bifunctor (second))
+import Data.Fixed
+import Data.Maybe
 import Graphics.Gloss (
-  Picture,
+  Picture (Pictures),
+  Vector,
   black,
+  blank,
   circleSolid,
   color,
+  line,
   pictures,
   rectangleSolid,
   red,
+  scale,
+  text,
   translate,
   white,
   yellow,
  )
+import Graphics.Gloss.Data.ViewPort (ViewPort (ViewPort), applyViewPortToPicture, viewPortTranslate)
+
+import Data.Map qualified as M
+import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
+  (*),
+  (+),
+  (-),
+ )
 
 import GlossyRuler (drawRuler)
-import Model (Assets (Assets, player), Object (Object, position), World (World, assets, character, windowSize), initialWorld)
+import Math
+import Model (
+  Assets (..),
+  CharacterStatus (..),
+  GlobalState (..),
+  Jump (..),
+  Object (Object, position, velocity),
+  ObjectType (..),
+  Screen (..),
+  UiState (UiState, assets, windowSize),
+  World (..),
+  characterInBubble,
+ )
+import Sound (pause)
+import View.Frog (
+  FrogState (FrogState, directionRight, eyesOpen, mouthOpen),
+  frogSprite,
+ )
 
-render :: World -> Picture
-render World {character = Object {position = (x, y)}, assets = Assets {player = playerSprite, ..}, ..} =
-  pictures
-    $
-    -- UI
-    let
-      windowWidth = fromIntegral $ fst windowSize
-      windowHeight = fromIntegral $ snd windowSize
+render :: GlobalState -> Picture
+render GlobalState {..} = case screen of
+  StartScreen ->
+    pictures
+      $ map
+        (uncurry (translate 0 . (* 100)) . second (scale 0.2 0.2))
+        [ (4, text "Some fancy game name"),
+          (1, text "Press Space to start a game"),
+          (-2, text "Press H to view high scores"),
+          (-4, text "Press ESC to quit the game")
+        ]
+  GameScreen world ->
+    pictures
+      [ text (show (bonusPoints world)),
+        renderWorld (windowSize uiState) (assets uiState) world
+      ]
+  HighScoreScreen -> blank
+
+renderWorld :: Vector -> Assets -> World -> Picture
+renderWorld
+  windowSize
+  assets
+  World
+    { character = Object {position = (x, y), velocity = (vx, vy)},
+      viewport = viewport@ViewPort {viewPortTranslate},
+      ..
+    } =
+    applyViewPortToPicture viewport
+      $ pictures
+      $ generateClouds viewPortTranslate
+        : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
+        : case jump of
+          -- TODO add vectorLength variable infront that depends on strength
+          Just (InitJump m) -> line [(x, y), (x, y) P.+ resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
+          Nothing -> blank
+        : translate
+          x
+          y
+          ( pictures
+              ( ( case characterStatus of
+                    CharacterAtBalloon _ -> [circleSolid 30] -- placeholder
+                    CharacterInBubble _ -> [characterBubble assets]
+                    PlainCharacter -> []
+                )
+                  ++ [frogSprite assets FrogState {eyesOpen = True, mouthOpen = False, directionRight = vx >= 0}]
+              )
+          )
+        : map renderObject (M.elems objects)
+    where
+      characterBubble = case characterStatus of
+        CharacterInBubble t
+          | t < 3 -> bubbleTimerDanger
+          | t < 7 -> bubbleTimerAttention
+        _ -> bubble
+
+      renderObject (t, Object {position}) =
+        uncurry
+          translate
+          position
+          ( case t of
+              Bubble -> bubble assets
+              Balloon -> circleSolid 30
+          )
+
+      -- using prime factors and the screen size as modulo 'ransomly' scatters the clouds can
+      generateClouds (x, y) =
+        translate x y
+          $ pictures
+          $ map (\i -> translate (mod' (137 * i) 1280 - 740) (mod' (271 * i) 720 - 360) (cloud assets)) [1 .. 7]
+      windowWidth = fst windowSize
+      windowHeight = snd windowSize
       rightBorderPosition = (windowWidth / 2, 0)
       rulerDimensions = (100, windowHeight)
       rulerDimensionsX = fst rulerDimensions
@@ -33,15 +129,3 @@ render World {character = Object {position = (x, y)}, assets = Assets {player = 
       rulerPosition = rightBorderPosition
       rulerNumberOfTickMarks = 10
       rulerIndicatedMeasurement = windowHeight / 2
-    in
-      drawRuler rulerPosition rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
-        :
-        -- player sprite
-        playerSprite
-        :
-        -- other stuff in the scene
-        map
-          (translate (-x) (-y))
-          [ translate 80 40 $ circleSolid 30,
-            translate (-250) 0 $ rectangleSolid 100 1000
-          ]

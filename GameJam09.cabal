@@ -56,16 +56,27 @@ common warnings
 
 library
   exposed-modules:
+    Math,
     Model,
     View,
     Controller,
-    GlossyRuler
+    GlossyRuler,
+    Sound,
+  other-modules:
+    HighScore,
+    View.Frog
   hs-source-dirs:
     src
   build-depends:
-    base ^>=4.18.3.0,
+    base ^>=4.18.2.0,
+    bytestring,
+    containers,
     extra,
-    gloss
+    directory,
+    filepath,
+    gloss,
+    ALUT,
+    random
   default-language: GHC2021
 
 executable GameJam09
@@ -84,7 +95,7 @@ executable GameJam09
     -- Other library packages from which modules are imported.
     build-depends:
         GameJam09,
-        base ^>=4.18.3.0,
+        base ^>=4.18.2.0,
         extra,
         gloss
 

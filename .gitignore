@@ -2,10 +2,13 @@
 *.o
 *.swp
 .DS_Store
+.idea
 .stack-work/
 .vscode/
 dist-newstyle/
 dist/
+flake.lock
+result
 stack.yaml.lock
 *.kra~
-./result
+*.kra-autosave.kra
