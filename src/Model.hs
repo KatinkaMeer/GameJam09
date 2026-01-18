@@ -151,7 +151,7 @@ initialWorld =
           },
       jump = Nothing,
       mousePosition = (0, 0),
-      objects = M.singleton 1 (Bubble, Object {position = (80, 40), velocity = (0, 0)}),
+      objects = M.singleton 1 (Bubble, Object {position = (80, 40), velocity = (50, 50)}),
       nextId = 2,
       bonusPoints = 0
     }

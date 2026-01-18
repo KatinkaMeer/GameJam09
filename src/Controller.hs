@@ -188,6 +188,10 @@ updateWorld
       collisionWithPlayer (_, Object {position = (oX, oY)}) =
         sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 40
       newCollisions = M.keys $ M.filter collisionWithPlayer objects
+      updateMovement object@Object {position = (x, y), velocity = (vx, vy)} =
+        object
+          { position = (x + vx * t, y + vy * t)
+          }
     in
       do
         (nextJump, newBonusPoints) <- case (characterStatus, updateCharacterStatus) of
@@ -215,7 +219,7 @@ updateWorld
               characterStatus = updateCharacterStatus,
               jump = nextJump,
               -- remove objects colliding with player
-              objects = M.filterWithKey (\k _ -> k `notElem` newCollisions) objects,
+              objects = M.map (\(t, o) -> (t, updateMovement o)) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
               nextId = nextId,
               bonusPoints = newBonusPoints

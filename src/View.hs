@@ -24,6 +24,7 @@ import Graphics.Gloss.Data.ViewPort (ViewPort (ViewPort), applyViewPortToPicture
 import Data.Map qualified as M
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (*),
+  (+),
   (-),
  )
 
@@ -74,7 +75,7 @@ renderWorld
       $ generateClouds viewPortTranslate
         : case jump of
           -- TODO add vectorLength variable infront that depends on strength
-          Just (InitJump m) -> line [(x, y), resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
+          Just (InitJump m) -> line [(x, y), (x, y) P.+ resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
           Nothing -> blank
         : translate
           x
