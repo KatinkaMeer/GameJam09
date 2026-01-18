@@ -222,5 +222,6 @@ updateWorld
               objects = M.map (\(t, o) -> (t, updateMovement o)) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
               nextId = nextId,
-              bonusPoints = newBonusPoints
+              bonusPoints = newBonusPoints,
+              elapsedTime = (+ t) elapsedTime
             }
