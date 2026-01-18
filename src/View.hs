@@ -54,17 +54,19 @@ import View.Frog (
 
 render :: GlobalState -> IO Picture
 render GlobalState {..} = do
-  highScores <- loadHighScores
-  case screen of
-    StartScreen ->
+ highScores <- loadHighScores
+ case screen of
+  StartScreen ->
       pure $ titleScreen $ assets uiState
-    GameScreen world ->
-      pure
-        $ pictures
-          [ text (show (bonusPoints world)),
-            renderWorld (windowSize uiState) (assets uiState) world
-          ]
-    HighScoreScreen -> pure $ text $ showHighScores highScores
+  GameScreen world ->
+      pure $ pictures
+        [ text $ show (bonusPoints world + floor (elapsedTime world)
+          + floor (characterAltitude world * 3)),
+          renderWorld (windowSize uiState) (assets uiState) world
+        ]
+  HighScoreScreen score characterAltitude ->
+    pure $ scale 0.2 0.2 $ pictures $
+    map (uncurry (translate 0 . (* 120)) . second (text . showHighScore)) $ zip [0 ..] highScores
 
 renderWorld :: Vector -> Assets -> World -> Picture
 renderWorld

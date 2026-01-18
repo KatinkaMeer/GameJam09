@@ -37,7 +37,6 @@ initialGlobalState assets =
     { uiState =
         UiState
           { assets = assets,
-            highScores = HighScores [],
             pressedKeys = [],
             windowSize = (800, 450)
           },
@@ -46,7 +45,6 @@ initialGlobalState assets =
 
 data UiState = UiState
   { assets :: !Assets,
-    highScores :: !HighScores,
     pressedKeys :: ![SpecialKey],
     windowSize :: !Vector
   }
@@ -54,11 +52,7 @@ data UiState = UiState
 data Screen
   = StartScreen
   | GameScreen !World
-  | HighScoreScreen
-
-newtype HighScores = HighScores
-  { unHighScores :: [(String, Integer)]
-  }
+  | HighScoreScreen !(Maybe Integer) !(Maybe Integer)
 
 data Object = Object
   { position :: !Point,

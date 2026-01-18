@@ -12,7 +12,7 @@ import Data.Tuple.Extra (first, second)
 import Graphics.Gloss.Data.ViewPort (ViewPort (..))
 import Graphics.Gloss.Interface.Pure.Game (
   Event (EventKey, EventMotion, EventResize),
-  Key (MouseButton, SpecialKey),
+  Key (Char, MouseButton, SpecialKey),
   KeyState (Down, Up),
   MouseButton (LeftButton),
   SpecialKey (KeyDown, KeyEsc, KeyLeft, KeyRight, KeySpace, KeyUp),
@@ -25,6 +25,7 @@ import Graphics.Gloss.Interface.Pure.Game (
 import System.Exit (exitSuccess)
 
 import Data.Map qualified as M
+import HighScore (logNewHighScore)
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (*),
   (+),
@@ -57,6 +58,9 @@ handleInput :: Event -> GlobalState -> IO GlobalState
 handleInput event state@GlobalState {..} =
   setMousePosition (mousePosFromEvent event)
     <$> case event of
+      EventKey (Char 'H') Up _ _
+        | StartScreen <- screen ->
+          pure state {screen = HighScoreScreen Nothing Nothing}
       EventKey (SpecialKey KeyEsc) Up _ _
         | StartScreen <- screen ->
             exitSuccess
@@ -166,10 +170,18 @@ update t state@GlobalState {..} = do
     GameScreen world@World {character = Object {..}, ..} ->
       ( case characterStatus of
           PlainCharacter timer
-            | timer <= -5 || snd position <= (snd levelBoundary + 10) -> pure HighScoreScreen
+            | timer <= -5 || snd position <= (snd levelBoundary + 10)
+            -> pure $ HighScoreScreen (Just $ bonusPoints + floor elapsedTime
+               + floor (characterAltitude * 3)) (Just $ floor characterAltitude)
           _ -> GameScreen <$> updateWorld t uiState world
       )
-    HighScoreScreen -> pure HighScoreScreen
+    HighScoreScreen mScore mAltitude
+      | Just score <- mScore
+      , Just altitude <- mAltitude -> do
+        logNewHighScore ("Kathy", (score, altitude))
+        pure $ HighScoreScreen mScore mAltitude
+      | otherwise ->
+        pure $ HighScoreScreen Nothing Nothing
   pure $ state {screen = nextScreen}
 
 updateWorld :: Float -> UiState -> World -> IO World

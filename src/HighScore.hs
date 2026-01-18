@@ -1,4 +1,5 @@
-module HighScore (loadHighScores, logNewHighScore, readMaxAltitude, updateMaxAltitude, showHighScores) where
+module HighScore (loadHighScores, logNewHighScore, readMaxAltitude, updateMaxAltitude,
+ showHighScore) where
 
 import Control.Monad (unless)
 import Data.Bifunctor (second)
@@ -9,7 +10,7 @@ import System.IO (writeFile)
 
 import Data.ByteString.Char8 qualified as BS
 
-type HighScore = (String, (Int, Int))
+type HighScore = (String, (Integer, Integer))
 
 ensureFileExists :: FilePath -> IO ()
 ensureFileExists path = do
@@ -20,8 +21,9 @@ ensureFileExists path = do
 loadHighScores :: IO [HighScore]
 loadHighScores = highScoreFile >>= readHighScores
 
-showHighScores :: [HighScore] -> String
-showHighScores scores = unlines [name ++ ": " ++ show points ++ " points, " ++ show altitude ++ " meters" | (name, (points, altitude)) <- scores]
+showHighScore :: HighScore -> String
+showHighScore (name, (points, altitude)) =
+    name ++ ": " ++ show points ++ " points, " ++ show altitude ++ " meters"
 
 readHighScores :: FilePath -> IO [HighScore]
 readHighScores path = do
