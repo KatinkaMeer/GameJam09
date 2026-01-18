@@ -130,13 +130,14 @@ levelBoundary :: (Float, Float)
 levelBoundary = (500, -500)
 
 -- TODO should the initial game settings be resolved in another way?
-moveSpeed, floatSpeed, fallSpeed, vBalloonMax, vBubbleMax, vPlChMax :: Float
+moveSpeed, floatSpeed, fallSpeed, vMaxScale, vBalloonMax, vBubbleMax, vPlainCharacterMax :: Float
 moveSpeed = 300
 floatSpeed = 60
 fallSpeed = 200
-vBalloonMax = 400
-vBubbleMax = 100
-vPlChMax = 1000
+vMaxScale = 1
+vBalloonMax = vMaxScale * 400
+vBubbleMax = vMaxScale * 200
+vPlainCharacterMax = vMaxScale * 600
 
 betweenSpeed :: Float -> Float -> Float
 betweenSpeed vmax v = max (-vmax) (min vmax v)
@@ -165,11 +166,11 @@ updateWorld
         | KeyRight `elem` pressedKeys = 1
         | otherwise = 0
       (vx', vy', updateCharacterStatus) = case characterStatus of
-        CharacterAtBalloon timer -> (0.98 * betweenSpeed vBalloonMax vx, betweenSpeed vBalloonMax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
-        CharacterInBubble timer -> (0.97 * betweenSpeed vBubbleMax vx, betweenSpeed vBubbleMax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
+        CharacterAtBalloon timer -> (0.985 * betweenSpeed vBalloonMax vx, betweenSpeed vBalloonMax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
+        CharacterInBubble timer -> (0.98 * betweenSpeed vBubbleMax vx, betweenSpeed vBubbleMax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
         PlainCharacter ->
-          ( 0.99 * betweenSpeed vPlChMax vx,
-            betweenSpeed vPlChMax (vy - t * fallSpeed),
+          ( 0.99 * betweenSpeed vPlainCharacterMax vx,
+            betweenSpeed vPlainCharacterMax (vy - t * fallSpeed),
             -- only care about first collision
             case listToMaybe newCollisions >>= \k -> M.lookup k objects of
               Nothing -> PlainCharacter
