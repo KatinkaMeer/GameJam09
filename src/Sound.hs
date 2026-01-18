@@ -43,12 +43,12 @@ data SoundName
 allSoundTracks :: Map SoundName SoundTrack
 {-# NOINLINE allSoundTracks #-}
 allSoundTracks =
-  unsafePerformIO
-    $ foldM
+  unsafePerformIO $
+    foldM
       ( \sounds track -> do
           ioRef <- newIORef Nothing
-          pure
-            $ M.insert
+          pure $
+            M.insert
               track
               SoundTrack
                 { ioRef = ioRef,

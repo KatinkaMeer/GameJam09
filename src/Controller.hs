@@ -3,48 +3,48 @@
 
 module Controller where
 
-import Data.List (delete, findIndex)
-import Data.Maybe (isNothing)
-import Data.Tuple.Extra (first, second)
-import Graphics.Gloss.Interface.Pure.Game (
-  Event (EventKey, EventMotion),
-  Key (MouseButton, SpecialKey),
-  KeyState (Down, Up),
-  MouseButton (LeftButton),
-  SpecialKey (KeyDown, KeyEsc, KeyLeft, KeyRight, KeySpace, KeyUp),
-  blank,
-  circleSolid,
-  color,
-  red,
-  yellow,
- )
-import System.Exit (exitSuccess)
-
+import Data.List (delete, find, findIndex)
+import Data.Map (lookup, member)
 import Data.Map qualified as M
-import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
-  (+),
- )
-
-import Model (
-  Assets (..),
-  CharacterStatus (..),
-  GlobalState (..),
-  Jump (..),
-  Object (..),
-  Screen (..),
-  UiState (..),
-  World (..),
-  characterFloats,
-  characterInBalloon,
-  characterInBubble,
-  initialWorld,
- )
-import Sound (
-  playBalloonInflateSound,
-  playBalloonPopSound,
-  playBubblePopSound,
-  playBubblesSound,
- )
+import Data.Maybe (isNothing, listToMaybe)
+import Data.Tuple.Extra (first, second)
+import Graphics.Gloss.Data.Point.Arithmetic qualified as P
+  ( (+),
+  )
+import Graphics.Gloss.Interface.Pure.Game
+  ( Event (EventKey, EventMotion),
+    Key (MouseButton, SpecialKey),
+    KeyState (Down, Up),
+    MouseButton (LeftButton),
+    SpecialKey (KeyDown, KeyEsc, KeyLeft, KeyRight, KeySpace, KeyUp),
+    blank,
+    circleSolid,
+    color,
+    red,
+    yellow,
+  )
+import Model
+  ( Assets (..),
+    CharacterStatus (..),
+    GlobalState (..),
+    Jump (..),
+    Object (..),
+    ObjectType (..),
+    Screen (..),
+    UiState (..),
+    World (..),
+    characterFloats,
+    characterInBalloon,
+    characterInBubble,
+    initialWorld,
+  )
+import Sound
+  ( playBalloonInflateSound,
+    playBalloonPopSound,
+    playBubblePopSound,
+    playBubblesSound,
+  )
+import System.Exit (exitSuccess)
 
 handleInput :: Event -> GlobalState -> IO GlobalState
 handleInput event state@GlobalState {..} =
@@ -82,38 +82,36 @@ handleInput event state@GlobalState {..} =
         | GameScreen world@World {..} <- screen,
           Just InitJump {..} <- jump,
           characterFloats characterStatus ->
-            let
-              -- TODO add minimum velocity and maximum velocity as variables
-              rposx = fst mousePoint
-              rposy = snd mousePoint
-              mposx = fst mpos
-              mposy = snd mpos
-              vx = 1000 * (rposx - mposx)
-              vy = 1000 * (rposy - mposy)
-              v2 = vx * vx + vy * vy
-              rv = sqrt $ v2 / max 1 (min v2 1000000)
-              vx' = vx / rv
-              vy' = vy / rv
-            in
-              do
-                case characterStatus of
-                  CharacterAtBalloon {} -> playBalloonPopSound
-                  CharacterInBubble {} -> playBubblePopSound
-                  PlainCharacter -> pure ()
-                pure
-                  state
-                    { screen =
-                        GameScreen
-                          world
-                            { character =
-                                character
-                                  { velocity = velocity character P.+ (vx', vy')
-                                  -- galilei
-                                  },
-                              characterStatus = PlainCharacter,
-                              jump = Nothing -- new Jump possible
-                            }
-                    }
+            let -- TODO add minimum velocity and maximum velocity as variables
+                rposx = fst mousePoint
+                rposy = snd mousePoint
+                mposx = fst mpos
+                mposy = snd mpos
+                vx = 1000 * (rposx - mposx)
+                vy = 1000 * (rposy - mposy)
+                v2 = vx * vx + vy * vy
+                rv = sqrt $ v2 / max 1 (min v2 1000000)
+                vx' = vx / rv
+                vy' = vy / rv
+             in do
+                  case characterStatus of
+                    CharacterAtBalloon {} -> playBalloonPopSound
+                    CharacterInBubble {} -> playBubblePopSound
+                    PlainCharacter -> pure ()
+                  pure
+                    state
+                      { screen =
+                          GameScreen
+                            world
+                              { character =
+                                  character
+                                    { velocity = velocity character P.+ (vx', vy')
+                                    -- galilei
+                                    },
+                                characterStatus = PlainCharacter,
+                                jump = Nothing -- new Jump possible
+                              }
+                      }
       _ -> pure state
   where
     startGame = do
@@ -156,45 +154,56 @@ updateWorld :: Float -> UiState -> World -> IO World
 updateWorld
   t
   UiState {..}
-  world@World {character = me@(Object (x, y) (vx, vy)), ..} = do
-    case (characterStatus, updateCharacterStatus) of
-      (CharacterAtBalloon {}, PlainCharacter) -> playBalloonPopSound
-      (PlainCharacter, CharacterAtBalloon {}) -> playBalloonInflateSound
-      (CharacterInBubble {}, PlainCharacter) -> playBubblePopSound
-      (PlainCharacter, CharacterInBubble {}) -> playBubblePopSound
-      _ -> pure ()
-    pure
-      world
-        { character =
-            me
-              { position =
-                  coordinateClamp
-                    ( x + moveSpeed * t * modifier + vx' * t,
-                      y + vy' * t
-                    ),
-                velocity = (vx', vy')
-              },
-          characterStatus = updateCharacterStatus,
-          collisions = M.keys $ M.filter collisionWithPlayer objects,
-          -- TODO: use and increment or increment every update
-          nextId = nextId
-        }
-    where
-      modifier
-        | KeyLeft `elem` pressedKeys = -1
-        | KeyRight `elem` pressedKeys = 1
-        | otherwise = 0
-      (vx', vy', updateCharacterStatus) = case characterStatus of
-        CharacterAtBalloon timer -> (0.98 * betweenSpeed vBalloonMax vx, betweenSpeed vBalloonMax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
-        CharacterInBubble timer -> (0.97 * betweenSpeed vBubbleMax vx, betweenSpeed vBubbleMax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
-        PlainCharacter -> (0.99 * betweenSpeed vPlChMax vx, betweenSpeed vPlChMax (vy - t * fallSpeed), PlainCharacter)
+  world@World {character = me@(Object (x, y) (vx, vy)), ..} =
+    let modifier
+          | KeyLeft `elem` pressedKeys = -1
+          | KeyRight `elem` pressedKeys = 1
+          | otherwise = 0
+        (vx', vy', updateCharacterStatus) = case characterStatus of
+          CharacterAtBalloon timer -> (0.98 * betweenSpeed vBalloonMax vx, betweenSpeed vBalloonMax (vy + 2 * t * floatSpeed), characterInBalloon $ timerUpdate timer)
+          CharacterInBubble timer -> (0.97 * betweenSpeed vBubbleMax vx, betweenSpeed vBubbleMax (vy + t * floatSpeed), characterInBubble $ timerUpdate timer)
+          PlainCharacter ->
+            ( 0.99 * betweenSpeed vPlChMax vx,
+              betweenSpeed vPlChMax (vy - t * fallSpeed),
+              -- only care about first collision
+              case listToMaybe newCollisions >>= \k -> M.lookup k objects of
+                Nothing -> PlainCharacter
+                Just (Bubble, _) -> CharacterInBubble 10
+                Just (Balloon, _) -> CharacterAtBalloon 5
+            )
 
-      timerUpdate = (- t)
+        timerUpdate = (- t)
 
-      coordinateClamp (xCoord, yCoord) =
-        ( if abs xCoord > fst levelBoundary then x else xCoord,
-          if yCoord < snd levelBoundary then y else yCoord
-        )
-      -- CHANGE THIS
-      collisionWithPlayer (_, Object {position = (oX, oY)}) =
-        sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 20
+        coordinateClamp (xCoord, yCoord) =
+          ( if abs xCoord > fst levelBoundary then x else xCoord,
+            if yCoord < snd levelBoundary then y else yCoord
+          )
+        -- CHANGE THIS
+        collisionWithPlayer (_, Object {position = (oX, oY)}) =
+          sqrt ((oX - x) ^ 2 + (oY - y) ^ 2) <= 40
+        newCollisions = M.keys $ M.filter collisionWithPlayer objects
+     in do
+          case (characterStatus, updateCharacterStatus) of
+            (CharacterAtBalloon {}, PlainCharacter) -> playBalloonPopSound
+            (PlainCharacter, CharacterAtBalloon {}) -> playBalloonInflateSound
+            (CharacterInBubble {}, PlainCharacter) -> playBubblePopSound
+            (PlainCharacter, CharacterInBubble {}) -> playBubblePopSound
+            _ -> pure ()
+          pure
+            world
+              { character =
+                  me
+                    { position =
+                        coordinateClamp
+                          ( x + moveSpeed * t * modifier + vx' * t,
+                            y + vy' * t
+                          ),
+                      velocity = (vx', vy')
+                    },
+                collisions = newCollisions,
+                characterStatus = updateCharacterStatus,
+                -- remove objects colliding with player
+                objects = M.filterWithKey (\k _ -> k `notElem` newCollisions) objects,
+                -- TODO: use and increment or increment every update
+                nextId = nextId
+              }
