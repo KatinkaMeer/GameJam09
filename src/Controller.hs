@@ -205,7 +205,7 @@ updateWorld
         | otherwise = 1
 
       coordinateClamp (xCoord, yCoord) =
-        ( if abs xCoord > fst levelBoundary then x else xCoord,
+        ( xCoord,
           if yCoord < snd levelBoundary then y else yCoord
         )
       -- CHANGE THIS
