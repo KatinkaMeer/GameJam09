@@ -19,6 +19,9 @@ ensureFileExists path = do
 loadHighScores :: IO [HighScore]
 loadHighScores = highScoreFile >>= readHighScores
 
+showHighScores :: [HighScore] -> String
+showHighScores scores = unlines [name ++ ": " ++ show points ++ " points, " ++ show altitude ++ " meters" | (name, (points, altitude)) <- scores]
+
 readHighScores :: FilePath -> IO [HighScore]
 readHighScores path = do
   ensureFileExists path
