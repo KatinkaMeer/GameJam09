@@ -22,7 +22,11 @@ import Graphics.Gloss (
   white,
   yellow,
  )
-import Graphics.Gloss.Data.ViewPort (ViewPort (ViewPort, viewPortScale), applyViewPortToPicture, viewPortTranslate)
+import Graphics.Gloss.Data.ViewPort (
+  ViewPort (ViewPort, viewPortScale),
+  applyViewPortToPicture,
+  viewPortTranslate,
+ )
 
 import Data.Map qualified as M
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
@@ -54,19 +58,31 @@ import View.Frog (
 
 render :: GlobalState -> IO Picture
 render GlobalState {..} = do
- highScores <- loadHighScores
- case screen of
-  StartScreen ->
+  highScores <- loadHighScores
+  case screen of
+    StartScreen ->
       pure $ titleScreen $ assets uiState
-  GameScreen world ->
-      pure $ pictures
-        [ text $ show (bonusPoints world + floor (elapsedTime world)
-          + floor (characterAltitude world * 3)),
-          renderWorld (windowSize uiState) (assets uiState) world
-        ]
-  HighScoreScreen score characterAltitude ->
-    pure $ scale 0.2 0.2 $ pictures $
-    map (uncurry (translate 0 . (* 120)) . second (text . showHighScore)) $ zip [0 ..] highScores
+    GameScreen world ->
+      pure
+        $ pictures
+          [ text
+              $ show
+                ( bonusPoints world
+                    + floor (elapsedTime world)
+                    + floor (characterAltitude world * 3)
+                ),
+            renderWorld (windowSize uiState) (assets uiState) world
+          ]
+    HighScoreScreen score characterAltitude ->
+      pure
+        $ scale 0.2 0.2
+        $ pictures
+        $ zipWith
+          ( curry
+              (uncurry (translate 0 . (* 120)) . second (text . showHighScore))
+          )
+          [0 ..]
+          highScores
 
 renderWorld :: Vector -> Assets -> World -> Picture
 renderWorld
@@ -83,7 +99,13 @@ renderWorld
         -- : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
         : case jump of
           -- TODO add vectorLength variable infront that depends on strength
-          Just (InitJump m) -> line [(x, y), (x, y) P.+ resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
+          Just (InitJump m) ->
+            line
+              [ (x, y),
+                (x, y)
+                  P.+ resizeVectorFactor 60 300 (m P.- mousePosition)
+                    P.* getNormVector (m P.- mousePosition)
+              ]
           Nothing -> blank
         : translate
           x
@@ -94,7 +116,14 @@ renderWorld
                     CharacterInBubble _ -> [characterBubble assets]
                     PlainCharacter _ -> []
                 )
-                  ++ [frogSprite assets FrogState {eyesOpen = True, mouthOpen = False, directionRight = vx >= 0}]
+                  ++ [ frogSprite
+                         assets
+                         FrogState
+                           { eyesOpen = True,
+                             mouthOpen = False,
+                             directionRight = vx >= 0
+                           }
+                     ]
               )
           )
         : map renderObject (M.elems objects)
@@ -114,11 +143,24 @@ renderWorld
               Balloon -> ballonRed assets
           )
 
-      -- using prime factors and the screen size as modulo 'ransomly' scatters the clouds can
+      -- using prime factors and the screen size as modulo 'ransomly'
+      -- scatters the clouds can
       generateClouds (x, y) =
         translate x y
           $ pictures
-          $ map (\i -> translate ((751 * i) `mod'` windowWidth - (windowWidth / 2)) ((971 * i) `mod'` windowHeight - (windowHeight / 2)) (cloud assets)) [1 .. 7]
+          $ map
+            ( \i ->
+                translate
+                  ((751 * i) `mod'` steppedWindowWidth - steppedWindowWidth / 2)
+                  ((971 * i) `mod'` steppedWindowHeight - steppedWindowHeight / 2)
+                  (cloud assets)
+            )
+            [-7 .. 7]
+      steppedScale =
+        min 1
+          $ fromIntegral (round (5 * sqrt (viewPortScale viewport))) / 10
+      steppedWindowWidth = fst windowSize / steppedScale
+      steppedWindowHeight = snd windowSize / steppedScale
       windowWidth = fst windowSize * viewPortScale viewport
       windowHeight = snd windowSize * viewPortScale viewport
 {--      rightBorderPosition = (windowWidth / 2, 0)

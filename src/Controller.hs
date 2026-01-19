@@ -222,12 +222,15 @@ updateWorld
 
       timerUpdate = (- t)
 
-      -- can't think of a good way to make this more generic
       viewportScaling
-        | y > 2000 = 0.125
-        | y > 1000 = 0.25
-        | y > 500 = 0.5
-        | otherwise = 1
+        | y > secondStep = smoothTransition (secondStep, 0.25) (endStep, 0.125) y
+        | y > firstStep = smoothTransition (firstStep, 0.5) (secondStep, 0.25) y
+        | otherwise = smoothTransition (0, 1) (firstStep, 0.5) y
+        where
+          stepBase = snd windowSize * 4 / 5
+          firstStep = stepBase
+          secondStep = 2 * stepBase
+          endStep = 3 * stepBase
 
       viewportTranslation
         | x < (fst viewPortTranslate + 128 - fst windowSize / 2 / viewPortScale) =
