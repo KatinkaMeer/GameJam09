@@ -31,7 +31,7 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (-),
  )
 
-import GlossyRuler (drawRuler)
+-- import GlossyRuler (drawRuler)
 import HighScore
 import Math
 import Model (
@@ -80,7 +80,7 @@ renderWorld
     applyViewPortToPicture viewport
       $ pictures
       $ generateClouds viewPortTranslate
-        : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
+        -- : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
         : case jump of
           -- TODO add vectorLength variable infront that depends on strength
           Just (InitJump m) -> line [(x, y), (x, y) P.+ resizeVectorFactor 60 300 (m P.- mousePosition) P.* getNormVector (m P.- mousePosition)]
@@ -121,10 +121,10 @@ renderWorld
           $ map (\i -> translate ((751 * i) `mod'` windowWidth - (windowWidth / 2)) ((971 * i) `mod'` windowHeight - (windowHeight / 2)) (cloud assets)) [1 .. 7]
       windowWidth = fst windowSize * viewPortScale viewport
       windowHeight = snd windowSize * viewPortScale viewport
-      rightBorderPosition = (windowWidth / 2, 0)
+{--      rightBorderPosition = (windowWidth / 2, 0)
       rulerDimensions = (100, windowHeight)
       rulerDimensionsX = fst rulerDimensions
       rulerDimensionsY = snd rulerDimensions
       rulerPosition = rightBorderPosition
       rulerNumberOfTickMarks = 10
-      rulerIndicatedMeasurement = windowHeight / 2
+      rulerIndicatedMeasurement = windowHeight / 2 --}

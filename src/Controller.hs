@@ -269,7 +269,8 @@ updateWorld
                 M.union (M.fromList spawnedObjects)
                   $ M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
-              viewport = viewport {viewPortScale = viewportScaling},
+              -- use viewportScaling when implementing != 1
+              viewport = viewport {viewPortScale = 1, viewPortTranslate = (-x, -y)},
               bonusPoints = newBonusPoints,
               elapsedTime = (+ t) elapsedTime
             }
