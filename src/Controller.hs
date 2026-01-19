@@ -3,9 +3,9 @@
 
 module Controller where
 
+import Control.Monad.Random.Class (MonadRandom, fromList, getRandomR, uniform)
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.Fixed (mod')
-import Control.Monad.Random.Class (MonadRandom, fromList, getRandomR, uniform)
 import Data.List (delete, find, findIndex)
 import Data.Map (lookup, member)
 import Data.Maybe (isNothing, listToMaybe)
@@ -28,12 +28,12 @@ import System.Exit (exitSuccess)
 import System.Random (Random (random))
 
 import Data.Map qualified as M
-import HighScore (logNewHighScore)
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (*),
   (+),
  )
 
+import HighScore (logNewHighScore)
 import Math
 import Model (
   Assets (..),
@@ -63,7 +63,7 @@ handleInput event state@GlobalState {..} =
     <$> case event of
       EventKey (Char 'H') Up _ _
         | StartScreen <- screen ->
-          pure state {screen = HighScoreScreen Nothing Nothing}
+            pure state {screen = HighScoreScreen Nothing Nothing}
       EventKey (SpecialKey KeyEsc) Up _ _
         | StartScreen <- screen ->
             exitSuccess
@@ -173,25 +173,35 @@ update t state@GlobalState {..} = do
     GameScreen world@World {character = Object {..}, ..} ->
       ( case characterStatus of
           PlainCharacter timer
-            | timer <= -5 || snd position <= (snd levelBoundary + 10)
-            -> pure $ HighScoreScreen (Just $ bonusPoints + floor elapsedTime
-               + floor (characterAltitude * 3)) (Just $ floor characterAltitude)
+            | timer <= -5 || snd position <= (snd levelBoundary + 10) ->
+                pure
+                  $ HighScoreScreen
+                    ( Just
+                        $ bonusPoints
+                          + floor elapsedTime
+                          + floor (characterAltitude * 3)
+                    )
+                    (Just $ floor characterAltitude)
           _ -> GameScreen <$> updateWorld t uiState world
       )
     HighScoreScreen mScore mAltitude
-      | Just score <- mScore
-      , Just altitude <- mAltitude -> do
-        logNewHighScore ("Kathy", (score, altitude))
-        pure $ HighScoreScreen mScore mAltitude
+      | Just score <- mScore,
+        Just altitude <- mAltitude -> do
+          logNewHighScore ("Kathy", (score, altitude))
+          pure $ HighScoreScreen mScore mAltitude
       | otherwise ->
-        pure $ HighScoreScreen Nothing Nothing
+          pure $ HighScoreScreen Nothing Nothing
   pure $ state {screen = nextScreen}
 
 updateWorld :: Float -> UiState -> World -> IO World
 updateWorld
   t
   uiState@UiState {..}
-  world@World {character = me@(Object (x, y) (vx, vy)), ..} =
+  world@World
+    { character = me@(Object (x, y) (vx, vy)),
+      viewport = viewport@ViewPort {..},
+      ..
+    } =
     let
       modifier
         | KeyLeft `elem` pressedKeys = -1
@@ -218,6 +228,13 @@ updateWorld
         | y > 1000 = 0.25
         | y > 500 = 0.5
         | otherwise = 1
+
+      viewportTranslation
+        | x < (fst viewPortTranslate + 128 - fst windowSize / 2 / viewPortScale) =
+            first (const (-x - fst windowSize / 4 / viewPortScale)) viewPortTranslate
+        | x > (fst viewPortTranslate - 128 + fst windowSize / 2 / viewPortScale) =
+            first (const (-x + fst windowSize / 4 / viewPortScale)) viewPortTranslate
+        | otherwise = viewPortTranslate
 
       coordinateClamp (xCoord, yCoord) =
         ( xCoord,
@@ -246,9 +263,10 @@ updateWorld
         randomNumber <- getRandomR (1 :: Int, 100)
         spawnedObjects <-
           if randomNumber < 10
-          then zip [nextId ..]
-            <$> mapM (const $ spawnObject uiState viewport) [1]
-          else pure []
+            then
+              zip [nextId ..]
+                <$> mapM (const $ spawnObject uiState viewport) [1]
+            else pure []
         pure
           world
             { character =
@@ -269,8 +287,11 @@ updateWorld
                 M.union (M.fromList spawnedObjects)
                   $ M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
-              -- use viewportScaling when implementing != 1
-              viewport = viewport {viewPortScale = 1, viewPortTranslate = (-x, -y)},
+              viewport =
+                viewport
+                  { viewPortScale = viewportScaling,
+                    viewPortTranslate = second (const (-y)) viewportTranslation
+                  },
               bonusPoints = newBonusPoints,
               elapsedTime = (+ t) elapsedTime
             }
