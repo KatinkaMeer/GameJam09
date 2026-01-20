@@ -37,6 +37,7 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
  )
 
 -- import GlossyRuler (drawRuler)
+import Controller (levelBoundary, oneMeter)
 import HighScore
 import Math
 import Model (
@@ -67,12 +68,17 @@ render GlobalState {..} = do
     GameScreen world ->
       pure
         $ pictures
-          [ text
-              $ show
-                ( bonusPoints world
-                    + floor (elapsedTime world)
-                    + floor (characterAltitude world * 3)
-                ),
+          [ applyViewPortToPicture (viewport world) $ translate
+              ((-fst (windowSize uiState)) / 2 + 10 - fst (viewPortTranslate (viewport world)))
+              (snd (windowSize uiState) / 2 - 60 - snd (viewPortTranslate (viewport world)))
+              $ scale 0.5 0.5
+              $ text
+              $ "Score: "
+                ++ show
+                  ( bonusPoints world
+                      + floor (elapsedTime world)
+                      + floor (characterAltitude world * 3)
+                  ),
             renderWorld (windowSize uiState) (assets uiState) world
           ]
     HighScoreScreen highScores newHighScore -> do
@@ -133,7 +139,8 @@ renderWorld
     } =
     applyViewPortToPicture viewport
       $ pictures
-      $ generateClouds viewPortTranslate
+      $ ruler
+        : generateClouds viewPortTranslate
         {-
         : drawRuler
           ((0, y) P.+ rulerPosition)
@@ -210,6 +217,53 @@ renderWorld
       steppedWindowHeight = snd windowSize / steppedScale
       windowWidth = fst windowSize * viewPortScale viewport
       windowHeight = snd windowSize * viewPortScale viewport
+
+      ruler :: Picture
+      ruler = unsafePerformIO $ do
+        putStr $ show (max zeroMeter screenBottom, screenTop) ++ "\r"
+        pure
+          $ translate
+            (fst windowSize / 2 / viewPortScale viewport - fst viewPortTranslate)
+            0
+          $ pictures
+          $ map
+            (\y -> drawTick y $ line [(-10, y * 25), (0, y * 25)])
+            [max zeroMeter screenBottom * 10 .. screenTop * 10]
+
+      zeroMeter = fromIntegral $ round (snd levelBoundary) `div` round oneMeter
+      screenBottom =
+        fromIntegral
+          $ ( floor
+                (-snd viewPortTranslate - snd windowSize / 2 / viewPortScale viewport)
+                `div` round oneMeter
+            )
+            - 1
+      screenTop =
+        fromIntegral
+          $ ( ceiling
+                (-snd viewPortTranslate + snd windowSize / 2 / viewPortScale viewport)
+                `div` round oneMeter
+            )
+            + 1
+
+      drawTick :: Float -> Picture -> Picture
+      drawTick y
+        | y `mod'` 10 == 0 =
+            pictures
+              . (scaleLabel :)
+              . (: [])
+              . scale 2 1
+              . color red
+        | otherwise =
+            color black
+        where
+          altitude = fromIntegral (y `div'` 10) - zeroMeter
+          scaleLabel =
+            translate (-25 + (-25) * logBase 10 altitude) (y * 25)
+              $ scale 0.2 0.2
+              $ text
+              $ show
+              $ round altitude
 
 {--      rightBorderPosition = (windowWidth / 2, 0)
       rulerDimensions = (100, windowHeight)
