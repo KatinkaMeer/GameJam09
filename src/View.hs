@@ -68,9 +68,10 @@ render GlobalState {..} = do
     GameScreen world ->
       pure
         $ pictures
-          [ applyViewPortToPicture (viewport world) $ translate
-              ((-fst (windowSize uiState)) / 2 + 10 - fst (viewPortTranslate (viewport world)))
-              (snd (windowSize uiState) / 2 - 60 - snd (viewPortTranslate (viewport world)))
+          [ applyViewPortToPicture (viewport world)
+              $ translate
+                ((-fst (windowSize uiState)) / 2 + 10 - fst (viewPortTranslate (viewport world)))
+                (snd (windowSize uiState) / 2 - 60 - snd (viewPortTranslate (viewport world)))
               $ scale 0.5 0.5
               $ text
               $ "Score: "
@@ -219,12 +220,10 @@ renderWorld
       windowHeight = snd windowSize * viewPortScale viewport
 
       ruler :: Picture
-      ruler = unsafePerformIO $ do
-        putStr $ show (max zeroMeter screenBottom, screenTop) ++ "\r"
-        pure
-          $ translate
-            (fst windowSize / 2 / viewPortScale viewport - fst viewPortTranslate)
-            0
+      ruler =
+        translate
+          (fst windowSize / 2 / viewPortScale viewport - fst viewPortTranslate)
+          0
           $ pictures
           $ map
             (\y -> drawTick y $ line [(-10, y * 25), (0, y * 25)])
