@@ -234,7 +234,7 @@ update t state@GlobalState {..} = do
     GameScreen world@World {character = Object {..}, ..} ->
       ( case characterStatus of
           PlainCharacter timer
-            | timer <= -5 || snd position <= (snd levelBoundary + 10) -> do
+            | timer <= -10 || snd position <= (snd levelBoundary + 10) -> do
                 highScores <- loadHighScores
                 pure
                   . HighScoreScreen
