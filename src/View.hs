@@ -20,6 +20,7 @@ import Graphics.Gloss (
   text,
   translate,
   white,
+  withAlpha,
   yellow,
  )
 import Graphics.Gloss.Data.ViewPort (
@@ -97,8 +98,14 @@ render GlobalState {..} = do
           Nothing -> []
           Just {} ->
             ["Type your name then press", "Enter to save your score."]
+        xFactor = fst (windowSize uiState) / 2500
+        yFactor = snd (windowSize uiState) / 2500
+        scalingFactor = min xFactor yFactor
       pure
-        $ scale 0.2 0.2
+        $ addBackgroundPicture (titleScreen $ assets uiState)
+        $ scale scalingFactor scalingFactor
+        $ addBackgroundPicture (color (withAlpha 0.9 white) $ rectangleSolid 2400 2360)
+        $ translate (-1200) 920
         $ pictures
         $ scale 2 2 (text "High Score List")
           : zipWith
@@ -111,6 +118,9 @@ render GlobalState {..} = do
                 ++ blank
                 : map text (additionalText ++ ["Press ESC to exit."])
             )
+
+addBackgroundPicture :: Picture -> Picture -> Picture
+addBackgroundPicture p = pictures . (p :) . (: [])
 
 renderWorld :: Vector -> Assets -> World -> Picture
 renderWorld
