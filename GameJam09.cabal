@@ -63,6 +63,8 @@ common warnings
     ghc-options: -Wall
 
 library
+  autogen-modules:
+    Paths_GameJam09,
   exposed-modules:
     Math,
     Model,
@@ -72,7 +74,8 @@ library
     Sound,
   other-modules:
     HighScore,
-    View.Frog
+    Paths_GameJam09,
+    View.Frog,
   hs-source-dirs:
     src
   build-depends:
@@ -103,6 +106,10 @@ executable GameJam09
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
 
+    autogen-modules:
+        Paths_GameJam09,
+    other-modules:
+        Paths_GameJam09,
     -- Other library packages from which modules are imported.
     build-depends:
         GameJam09,

@@ -23,7 +23,7 @@ import Graphics.Gloss.Interface.Pure.Game (
   Key (Char, MouseButton, SpecialKey),
   KeyState (Down, Up),
   MouseButton (LeftButton),
-  SpecialKey (KeyDown, KeyEsc, KeyLeft, KeyRight, KeySpace, KeyUp),
+  SpecialKey (..),
   blank,
   circleSolid,
   color,
@@ -39,13 +39,15 @@ import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (+),
  )
 
-import HighScore (logNewHighScore)
+import HighScore (loadHighScores, logNewHighScore)
 import Math
 import Model (
   Assets (..),
   CharacterStatus (..),
   GlobalState (..),
+  HighScore (HighScore),
   Jump (..),
+  NewHighScore (..),
   Object (..),
   ObjectType (..),
   Screen (..),
@@ -67,9 +69,6 @@ handleInput :: Event -> GlobalState -> IO GlobalState
 handleInput event state@GlobalState {..} =
   setMousePosition (mousePosFromEvent event)
     <$> case event of
-      EventKey (Char 'H') Up _ _
-        | StartScreen <- screen ->
-            pure state {screen = HighScoreScreen Nothing Nothing}
       EventKey (SpecialKey KeyEsc) Up _ _
         | StartScreen <- screen ->
             exitSuccess
@@ -78,6 +77,35 @@ handleInput event state@GlobalState {..} =
       EventKey (SpecialKey KeySpace) Up _ _
         | StartScreen <- screen -> startGame
         | GameScreen {} <- screen -> startGame
+      EventKey (SpecialKey KeyEnter) Up _ _
+        | HighScoreScreen highScores NewHighScore {..} <- screen ->
+            pure
+              state
+                { screen =
+                    HighScoreScreen
+                      highScores
+                      CompleteNewHighScore
+                        { newPlayerName = incompleteNewPlayerName,
+                          newScorePoints = newScorePoints,
+                          newScoreAltitude = newScoreAltitude
+                        }
+                }
+      EventKey (SpecialKey key) Up _ _
+        | key `elem` [KeyBackspace, KeyDelete],
+          HighScoreScreen highScores newHighScore@NewHighScore {..} <- screen ->
+            pure
+              state
+                { screen =
+                    HighScoreScreen
+                      highScores
+                      newHighScore
+                        { incompleteNewPlayerName =
+                            if incompleteNewPlayerName == "..."
+                              || length incompleteNewPlayerName < 2
+                              then "..."
+                              else init incompleteNewPlayerName
+                        }
+                }
       EventKey (SpecialKey k) action _ _ ->
         pure
           state
@@ -135,6 +163,24 @@ handleInput event state@GlobalState {..} =
                               jump = Nothing -- new Jump possible
                             }
                     }
+      EventKey (Char 'H') Up _ _
+        | StartScreen <- screen -> do
+            highScores <- loadHighScores
+            pure state {screen = HighScoreScreen highScores NoNewHighScore}
+      EventKey (Char c) Up _ _
+        | HighScoreScreen highScores newHighScore@NewHighScore {..} <- screen ->
+            pure
+              state
+                { screen =
+                    HighScoreScreen
+                      highScores
+                      newHighScore
+                        { incompleteNewPlayerName =
+                            if incompleteNewPlayerName == "..."
+                              then [c]
+                              else incompleteNewPlayerName ++ [c]
+                        }
+                }
       EventResize newSize ->
         pure
           state
@@ -184,24 +230,27 @@ update t state@GlobalState {..} = do
     GameScreen world@World {character = Object {..}, ..} ->
       ( case characterStatus of
           PlainCharacter timer
-            | timer <= -5 || snd position <= (snd levelBoundary + 10) ->
+            | timer <= -5 || snd position <= (snd levelBoundary + 10) -> do
+                highScores <- loadHighScores
                 pure
-                  $ HighScoreScreen
-                    ( Just
-                        $ bonusPoints
-                          + floor elapsedTime
-                          + floor (characterAltitude * 3)
+                  . HighScoreScreen
+                    highScores
+                  $ NewHighScore
+                    "..."
+                    ( bonusPoints
+                        + floor elapsedTime
+                        + floor (characterAltitude * 3)
                     )
-                    (Just $ floor characterAltitude)
+                    (floor characterAltitude)
           _ -> GameScreen <$> updateWorld t uiState world
       )
-    HighScoreScreen mScore mAltitude
-      | Just score <- mScore,
-        Just altitude <- mAltitude -> do
-          logNewHighScore ("Kathy", (score, altitude))
-          pure $ HighScoreScreen mScore mAltitude
+    HighScoreScreen highScores newScore
+      | CompleteNewHighScore {..} <- newScore -> do
+          logNewHighScore
+            $ HighScore newPlayerName newScorePoints newScoreAltitude
+          pure $ HighScoreScreen highScores NoNewHighScore
       | otherwise ->
-          pure $ HighScoreScreen Nothing Nothing
+          pure $ HighScoreScreen highScores newScore
   pure $ state {screen = nextScreen}
 
 updateWorld :: Float -> UiState -> World -> IO World
@@ -314,7 +363,9 @@ updateWorld
               -- remove objects colliding with player
               objects =
                 M.union (M.fromList spawnedObjects)
-                  $ M.map (second updateMovement) (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
+                  $ M.map
+                    (second updateMovement)
+                    (M.filterWithKey (\k _ -> k `notElem` newCollisions) objects),
               -- TODO: use and increment or increment every update
               viewport =
                 viewport

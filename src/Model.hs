@@ -1,7 +1,9 @@
 module Model (
   CharacterStatus (..),
   GlobalState (..),
+  HighScore (..),
   Jump (..),
+  NewHighScore (..),
   Object (..),
   Screen (..),
   UiState (..),
@@ -18,7 +20,9 @@ where
 
 import Data.Map (Map)
 import Graphics.Gloss (Picture (Pictures), Point, Vector, translate)
-import Graphics.Gloss.Data.ViewPort (ViewPort (ViewPort, viewPortRotate, viewPortScale, viewPortTranslate))
+import Graphics.Gloss.Data.ViewPort (
+  ViewPort (ViewPort, viewPortRotate, viewPortScale, viewPortTranslate),
+ )
 import Graphics.Gloss.Interface.Pure.Game (SpecialKey)
 
 import Data.Map qualified as M
@@ -49,10 +53,29 @@ data UiState = UiState
     windowSize :: !Vector
   }
 
+data HighScore = HighScore
+  { playerName :: !String,
+    scorePoints :: !Integer,
+    scoreAltitude :: !Integer
+  }
+
+data NewHighScore
+  = NoNewHighScore
+  | NewHighScore
+      { incompleteNewPlayerName :: !String,
+        newScorePoints :: !Integer,
+        newScoreAltitude :: !Integer
+      }
+  | CompleteNewHighScore
+      { newPlayerName :: !String,
+        newScorePoints :: !Integer,
+        newScoreAltitude :: !Integer
+      }
+
 data Screen
   = StartScreen
   | GameScreen !World
-  | HighScoreScreen !(Maybe Integer) !(Maybe Integer)
+  | HighScoreScreen ![HighScore] !NewHighScore
 
 data Object = Object
   { position :: !Point,

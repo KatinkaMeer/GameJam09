@@ -4,10 +4,10 @@ module Main where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game (playIO)
-import Paths_GameJam09 (getDataFileName)
 
 import Controller
 import Model
+import Paths_GameJam09 (getDataFileName)
 import Sound hiding (play)
 import View
 

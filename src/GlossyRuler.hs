@@ -30,4 +30,9 @@ drawRuler position dimensions numTickMarks measurement baseColor tickColor measu
     measurementMarkerOffset = -(measurementMakerDimx / 4)
     measurementMakerDimx = fst measurementMakerDimensions
     measurementMakerDimy = snd measurementMakerDimensions
-    measurementMaker = translate (-(measurementMakerDimx / 2) + measurementMarkerOffset) (measurement - dimy / 2) $ color measurementColor $ rectangleSolid measurementMakerDimx measurementMakerDimy
+    measurementMaker =
+      translate
+        (-(measurementMakerDimx / 2) + measurementMarkerOffset)
+        (measurement - dimy / 2)
+        $ color measurementColor
+        $ rectangleSolid measurementMakerDimx measurementMakerDimy

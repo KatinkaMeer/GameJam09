@@ -1,3 +1,5 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module HighScore (
   loadHighScores,
   logNewHighScore,
@@ -9,13 +11,18 @@ module HighScore (
 import Control.Monad (unless)
 import Data.Bifunctor (second)
 import Data.List (sortOn)
-import System.Directory (XdgDirectory (XdgData), createDirectoryIfMissing, doesFileExist, getXdgDirectory)
+import System.Directory (
+  XdgDirectory (XdgData),
+  createDirectoryIfMissing,
+  doesFileExist,
+  getXdgDirectory,
+ )
 import System.FilePath (dropFileName, (<.>), (</>))
 import System.IO (writeFile)
 
 import Data.ByteString.Char8 qualified as BS
 
-type HighScore = (String, (Integer, Integer))
+import Model (HighScore (..))
 
 ensureFileExists :: FilePath -> IO ()
 ensureFileExists path = do
@@ -27,8 +34,13 @@ loadHighScores :: IO [HighScore]
 loadHighScores = highScoreFile >>= readHighScores
 
 showHighScore :: HighScore -> String
-showHighScore (name, (points, altitude)) =
-  name ++ ": " ++ show points ++ " points, " ++ show altitude ++ " meters"
+showHighScore HighScore {..} =
+  playerName
+    ++ ": "
+    ++ show scorePoints
+    ++ " points, "
+    ++ show scoreAltitude
+    ++ " meters"
 
 readHighScores :: FilePath -> IO [HighScore]
 readHighScores path = do
@@ -39,7 +51,12 @@ readHighScores path = do
   pure [parseLine line | line <- ls, not (null line)]
   where
     parseLine :: String -> HighScore
-    parseLine line = (name, (read points, read altitude))
+    parseLine line =
+      HighScore
+        { playerName = name,
+          scorePoints = read points,
+          scoreAltitude = read altitude
+        }
       where
         (name, score) = second (drop 2) $ break (== ',') line
         (points, altitude) = second (drop 2) $ break (== ',') score
@@ -53,21 +70,28 @@ logNewHighScore highScore = do
   path <- highScoreFile
   highScores <- loadHighScores
   let
-    sortedHighScores = take 10 $ sortOn (negate . fst . snd) (highScore : highScores)
+    sortedHighScores =
+      take 10 $ sortOn (negate . scorePoints) (highScore : highScores)
   writeHighScores path sortedHighScores
 
 writeHighScores :: FilePath -> [HighScore] -> IO ()
 writeHighScores path scores = do
   ensureFileExists path
   let
-    content = unlines [name ++ ", " ++ show points ++ ", " ++ show altitude | (name, (points, altitude)) <- scores]
+    content =
+      unlines
+        [ playerName ++ ", " ++ show scorePoints ++ ", " ++ show scoreAltitude
+        | HighScore {..} <- scores
+        ]
   BS.writeFile path $ BS.pack content
 
 highScoreFile :: IO FilePath
-highScoreFile = getXdgDirectory XdgData $ "gamejam09" </> "highscores" <.> "csv"
+highScoreFile =
+  getXdgDirectory XdgData $ "gamejam09" </> "highscores" <.> "csv"
 
 maxAltitudeFile :: IO FilePath
-maxAltitudeFile = getXdgDirectory XdgData $ "gamejam09" </> "max_altitude" <.> "txt"
+maxAltitudeFile =
+  getXdgDirectory XdgData $ "gamejam09" </> "max_altitude" <.> "txt"
 
 readMaxAltitude :: IO Integer
 readMaxAltitude = do

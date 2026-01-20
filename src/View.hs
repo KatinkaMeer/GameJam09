@@ -42,7 +42,9 @@ import Model (
   Assets (..),
   CharacterStatus (..),
   GlobalState (..),
+  HighScore (..),
   Jump (..),
+  NewHighScore (..),
   Object (Object, position, velocity),
   ObjectType (..),
   Screen (..),
@@ -58,7 +60,6 @@ import View.Frog (
 
 render :: GlobalState -> IO Picture
 render GlobalState {..} = do
-  highScores <- loadHighScores
   case screen of
     StartScreen ->
       pure $ titleScreen $ assets uiState
@@ -73,16 +74,43 @@ render GlobalState {..} = do
                 ),
             renderWorld (windowSize uiState) (assets uiState) world
           ]
-    HighScoreScreen score characterAltitude ->
+    HighScoreScreen highScores newHighScore -> do
+      highScores <- loadHighScores
+      let
+        maybeNewHighScore = case newHighScore of
+          NoNewHighScore -> Nothing
+          NewHighScore {..} ->
+            Just
+              HighScore
+                { playerName = incompleteNewPlayerName,
+                  scorePoints = newScorePoints,
+                  scoreAltitude = newScoreAltitude
+                }
+          CompleteNewHighScore {..} ->
+            Just
+              HighScore
+                { playerName = newPlayerName,
+                  scorePoints = newScorePoints,
+                  scoreAltitude = newScoreAltitude
+                }
+        additionalText = case maybeNewHighScore of
+          Nothing -> []
+          Just {} ->
+            ["Type your name then press", "Enter to save your score."]
       pure
         $ scale 0.2 0.2
         $ pictures
-        $ zipWith
-          ( curry
-              (uncurry (translate 0 . (* 120)) . second (text . showHighScore))
-          )
-          [0 ..]
-          highScores
+        $ scale 2 2 (text "High Score List")
+          : zipWith
+            (translate 0 . (* (-130)))
+            [1 ..]
+            ( blank
+                : map
+                  (text . showHighScore)
+                  (maybeToList maybeNewHighScore ++ highScores)
+                ++ blank
+                : map text (additionalText ++ ["Press ESC to exit."])
+            )
 
 renderWorld :: Vector -> Assets -> World -> Picture
 renderWorld
@@ -96,7 +124,16 @@ renderWorld
     applyViewPortToPicture viewport
       $ pictures
       $ generateClouds viewPortTranslate
-        -- : drawRuler ((0, y) P.+ rulerPosition) rulerDimensions rulerNumberOfTickMarks rulerIndicatedMeasurement white yellow red
+        {-
+        : drawRuler
+          ((0, y) P.+ rulerPosition)
+          rulerDimensions
+          rulerNumberOfTickMarks
+          rulerIndicatedMeasurement
+          white
+          yellow
+          red
+          -}
         : case jump of
           -- TODO add vectorLength variable infront that depends on strength
           Just (InitJump m) ->
