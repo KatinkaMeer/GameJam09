@@ -203,6 +203,10 @@ handleInput event state@GlobalState {..} =
 levelBoundary :: (Float, Float)
 levelBoundary = (500, -500)
 
+-- | How many pixels correspond to one meter
+oneMeter :: Float
+oneMeter = 250
+
 -- TODO should the initial game settings be resolved in another way?
 moveSpeed, floatSpeed, fallSpeed :: Float
 moveSpeed = 300
@@ -356,6 +360,8 @@ updateWorld
                         ),
                     velocity = (vx', vy')
                   },
+              characterAltitude =
+                -(snd levelBoundary / oneMeter) - (snd viewPortTranslate / oneMeter),
               collisions = newCollisions,
               characterStatus = updateCharacterStatus,
               jump = nextJump,
