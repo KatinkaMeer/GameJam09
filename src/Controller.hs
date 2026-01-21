@@ -355,9 +355,7 @@ updateWorld
                 me
                   { position =
                       coordinateClamp
-                        ( x + moveSpeed * t * modifier + vx' * t,
-                          y + vy' * t
-                        ),
+                        ((x, y) P.+ (t P.* (moveSpeed * modifier + vx, vy'))),
                     velocity = (vx', vy')
                   },
               characterAltitude =
@@ -409,8 +407,8 @@ spawnObject
               ((x + halfCharacterSize, y - windowY / viewPortScale), 2 % 16),
               ((x + halfCharacterSize, -y - halfCharacterSize), 1 % 16)
             ]
-        vx <- getRandomR (-(vBubbleMax / 4), vBubbleMax / 4)
-        vy <- getRandomR (-(vBubbleMax / 4), vBubbleMax / 4)
+        vx <- getRandomR ((vBubbleMax / 4) P.* (-1, 1)) -- Why Quarters? What is vBubbleMax then for?
+        vy <- getRandomR ((vBubbleMax / 4) P.* (-1, 1))
         pure $ Object {position = position, velocity = (vx, vy)}
       Balloon -> do
         position <-
@@ -419,7 +417,7 @@ spawnObject
               (x - windowX / viewPortScale, -y - halfCharacterSize),
               (x + halfCharacterSize, -y - halfCharacterSize)
             ]
-        vx <- getRandomR (-(vBalloonMax / 4), vBalloonMax / 4)
+        vx <- getRandomR ((vBalloonMax / 4) P.* (-1, 1))
         pure $ Object {position = position, velocity = (vx, vBalloonMax)}
     pure (objectType, object)
     where
