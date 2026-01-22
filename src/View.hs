@@ -257,9 +257,16 @@ renderWorld
             color black
         where
           altitude = fromIntegral (y `div'` 10) - zeroMeter
+          baseScale = 0.2
+          scaleFactor =
+            if (y - 10 * zeroMeter) `mod'` 100 == 0
+              then baseScale / viewPortScale viewport
+              else baseScale
           scaleLabel =
-            translate (-25 + (-25) * logBase 10 altitude) (y * 25)
-              $ scale 0.2 0.2
+            translate
+              (-25 + (-25) * logBase 10 altitude * scaleFactor / baseScale)
+              (y * 25)
+              $ scale scaleFactor scaleFactor
               $ text
               $ show
               $ round altitude
