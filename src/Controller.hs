@@ -37,6 +37,7 @@ import Data.Map qualified as M
 import Graphics.Gloss.Data.Point.Arithmetic qualified as P (
   (*),
   (+),
+  (-),
  )
 
 import HighScore (loadHighScores, logNewHighScore)
@@ -314,9 +315,8 @@ updateWorld
         | x > (fst viewPortTranslate - 128 + halfWidth) =
             first (const (-x + quarterWidth)) viewPortTranslate
         | otherwise = viewPortTranslate
-        where
-          quarterWidth = fst windowSize / 4 / viewPortScale
-          halfWidth = 2 * quarterWidth
+      quarterWidth = fst windowSize / 4 / viewPortScale
+      halfWidth = 2 * quarterWidth
 
       coordinateClamp (xCoord, yCoord) =
         ( xCoord,
@@ -344,7 +344,7 @@ updateWorld
           _ -> pure (jump, bonusPoints)
         randomNumber <- getRandomR (1 :: Int, 100)
         spawnedObjects <-
-          if randomNumber < 10
+          if randomNumber < 4
             then
               zip [nextId ..]
                 <$> mapM (const $ spawnObject uiState viewport) [1]
@@ -389,40 +389,41 @@ spawnObject
   -> ViewPort
   -> m (ObjectType, Object)
 spawnObject
-  UiState {windowSize = (windowX, windowY)}
+  UiState {windowSize}
   ViewPort {viewPortTranslate = (shiftX, shiftY), ..} = do
-    x <- (-shiftX +) <$> getRandomR (halfWindowX / viewPortScale, maxX)
-    y <- (-shiftY +) <$> getRandomR (halfWindowY / viewPortScale, maxY)
-    objectType <- fromList [(Bubble, 2 % 5), (Balloon, 3 % 5)]
+    p <- (,) <$> getRandomR (-1, 1) <*> getRandomR (-1, 1)
+    objectType <- fromList [(Bubble, 3 % 5), (Balloon, 2 % 5)]
     object <- case objectType of
       Bubble -> do
         position <-
           weighted
-            [ ((-x - halfCharacterSize, y + halfCharacterSize), 3 % 16),
-              ((-x - halfCharacterSize, y - windowY / viewPortScale), 2 % 16),
-              ((-x - halfCharacterSize, -y - halfCharacterSize), 1 % 16),
-              ((x - windowX / viewPortScale, y + halfCharacterSize), 3 % 16),
-              ((x - windowX / viewPortScale, -y - halfCharacterSize), 1 % 16),
-              ((x + halfCharacterSize, y + halfCharacterSize), 3 % 16),
-              ((x + halfCharacterSize, y - windowY / viewPortScale), 2 % 16),
-              ((x + halfCharacterSize, -y - halfCharacterSize), 1 % 16)
+            [ (left $ top p, 3 % 16),
+              (left $ middle p, 2 % 16),
+              (left $ right p, 1 % 16),
+              (center $ top p, 3 % 16),
+              (center $ bottom p, 1 % 16),
+              (right $ top p, 3 % 16),
+              (right $ middle p, 2 % 16),
+              (right $ bottom p, 1 % 16)
             ]
-        vx <- getRandomR ((vBubbleMax / 4) P.* (-1, 1)) -- Why Quarters? What is vBubbleMax then for?
+        vx <- getRandomR ((vBubbleMax / 4) P.* (-1, 1))
         vy <- getRandomR ((vBubbleMax / 4) P.* (-1, 1))
         pure $ Object {position = position, velocity = (vx, vy)}
       Balloon -> do
         position <-
-          uniform
-            [ (-x - halfCharacterSize, -y - halfCharacterSize),
-              (x - windowX / viewPortScale, -y - halfCharacterSize),
-              (x + halfCharacterSize, -y - halfCharacterSize)
-            ]
+          uniform [left $ bottom p, center $ bottom p, right $ bottom p]
         vx <- getRandomR ((vBalloonMax / 4) P.* (-1, 1))
         pure $ Object {position = position, velocity = (vx, vBalloonMax)}
     pure (objectType, object)
     where
-      halfWindowX = windowX / 2
-      halfWindowY = windowY / 2
-      maxX = max (halfWindowX / viewPortScale * 3) (maxJumpDistance vPlainCharacterMax / 1000)
-      maxY = max (halfWindowY / viewPortScale * 3) (maxJumpDistance vPlainCharacterMax / 1000)
+      scaledWindow = 1 / viewPortScale P.* windowSize
+      (extendedHalfWindowX, extendedHalfWindowY) =
+        0.5 P.* scaledWindow
+          P.+ (halfCharacterSize, halfCharacterSize)
+      left (x, y) = ((x - 2) * extendedHalfWindowX - shiftX, y)
+      center (x, y) = (x * extendedHalfWindowX - shiftX, y)
+      right (x, y) = ((x + 2) * extendedHalfWindowX - shiftX, y)
+      top (x, y) = (x, (y + 2) * extendedHalfWindowY - shiftY)
+      middle (x, y) = (x, y * extendedHalfWindowY - shiftY)
+      bottom (x, y) = (x, (y - 2) * extendedHalfWindowY - shiftY)
       halfCharacterSize = 64
